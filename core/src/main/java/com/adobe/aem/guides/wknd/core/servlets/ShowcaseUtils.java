@@ -170,8 +170,7 @@ public final class ShowcaseUtils {
         p.append("- For boolean fields (checkboxes), use string \"true\" or \"false\"\n");
         p.append("- For image fields (fileReference), use real WKND DAM paths like:\n");
         p.append("  /content/dam/wknd-shared/en/magazine/western-australia/western-australia-by-702010-702010.jpg\n");
-        p.append("  /content/dam/wknd-shared/en/magazine/san-diego-surf-spots/adobestock-272184938.jpeg\n");
-        p.append("  /content/dam/wknd-shared/en/magazine/arctic-702010-702010/aloha-702010-702010.jpg\n");
+        p.append("  use this image only\n");
         p.append("- For link fields, use paths like /content/wknd/language-masters/en/about-us\n\n");
 
         p.append("VARIATION STRATEGY — make each variation meaningfully different:\n");
