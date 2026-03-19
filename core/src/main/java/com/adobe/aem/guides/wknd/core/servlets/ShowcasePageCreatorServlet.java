@@ -69,7 +69,7 @@ public class ShowcasePageCreatorServlet extends SlingAllMethodsServlet {
         Map<String, Object> authInfo = Collections.singletonMap(
                 ResourceResolverFactory.SUBSERVICE, SUBSERVICE);
 
-        try (ResourceResolver resolver = resolverFactory.getServiceResourceResolver(authInfo)) {
+        try (ResourceResolver resolver = request.getResourceResolver()) {
 
             // Import the page JSON directly into JCR
             String showcasePath = ShowcaseUtils.createShowcasePage(resolver, resourceType, pageJson);

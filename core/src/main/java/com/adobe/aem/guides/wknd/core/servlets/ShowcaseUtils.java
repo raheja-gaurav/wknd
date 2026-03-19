@@ -22,7 +22,7 @@ public final class ShowcaseUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ShowcaseUtils.class);
 
-    public static final String SHOWCASE_ROOT = "/content/showcase";
+    public static final String SHOWCASE_ROOT = "/content/library";
 
     private ShowcaseUtils() {}
 
