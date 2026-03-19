@@ -373,6 +373,207 @@ input[type=checkbox] {
   accent-color: #1473e6;
   cursor: pointer;
 }
+
+/* ---- PROMPT POPUP OVERLAY ---- */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.popup-overlay.open { display: flex; }
+
+.popup-modal {
+  background: #fff;
+  border-radius: 6px;
+  width: 92vw;
+  max-width: 1100px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+  font-family: 'Adobe Clean','Source Sans Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  overflow: hidden;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e8e8e8;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+.popup-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c2c2c;
+}
+.popup-subtitle {
+  font-size: 12px;
+  color: #707070;
+  margin-top: 2px;
+}
+.popup-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #707070;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.popup-close:hover { background: #e8e8e8; color: #2c2c2c; }
+
+.popup-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* LEFT PANE */
+.popup-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+.popup-pane-header {
+  padding: 10px 16px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.popup-pane-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2c2c2c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pane-hint {
+  font-size: 11px;
+  color: #909090;
+  margin-top: 2px;
+}
+.popup-pane-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+}
+#promptText {
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+.loading-prompt {
+  color: #909090;
+  font-size: 13px;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e8e8e8;
+  border-top-color: #1473e6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RIGHT PANE */
+.popup-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#jsonInput {
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+#jsonInput::placeholder { color: #b0b0b0; }
+
+.popup-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+.btn-cancel-popup {
+  height: 32px;
+  background: #fff;
+  color: #2c2c2c;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-cancel-popup:hover { background: #f5f5f5; }
+.btn-create-page {
+  height: 32px;
+  background: #268e6c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-create-page:hover { background: #1f7359; }
+.btn-create-page:disabled { background: #b0b0b0; cursor: not-allowed; }
+.btn-copy {
+  height: 28px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-copy:hover { background: #0d66d0; }
+.btn-copy.copied { background: #268e6c; }
 </style>
 </head>
 <body style="margin:0; padding:0; background:#f5f5f5;">
@@ -555,13 +756,105 @@ input[type=checkbox] {
 <!-- Toast notification -->
 <div class="granite-toast" id="toast"></div>
 
-<script>
-/* =============================================
-   CLIENTLIB: js/showcase-dashboard.js
-   Category: wknd.showcase.dashboard
-   ============================================= */
+<!-- =============================================
+     PROMPT POPUP MODAL
+     ============================================= -->
+<div class="popup-overlay" id="promptPopup" onclick="handleOverlayClick(event)">
+  <div class="popup-modal">
 
-/* ---- ROW SELECTION ---- */
+    <!-- Modal header -->
+    <div class="popup-header">
+      <div>
+        <h2 id="popupTitle">Generate Showcase — Teaser</h2>
+        <div class="popup-subtitle">Copy the prompt → paste into Claude → paste the JSON response back → click Generate Page</div>
+      </div>
+      <button class="popup-close" onclick="closePopup()" title="Close">&#10005;</button>
+    </div>
+
+    <!-- Two-pane body -->
+    <div class="popup-body">
+
+      <!-- LEFT: Generated prompt -->
+      <div class="popup-left">
+        <div class="popup-pane-header">
+          <div>
+            <div class="popup-pane-title">Step 1 — AI Prompt</div>
+            <div class="pane-hint">Copy this and paste it into Claude / ChatGPT</div>
+          </div>
+          <button class="btn-copy" id="copyBtn" onclick="copyPrompt()">Copy Prompt</button>
+        </div>
+        <div class="popup-pane-content">
+          <div class="loading-prompt" id="promptLoading">
+            <span class="spinner"></span> Reading dialog and building prompt...
+          </div>
+          <textarea id="promptText" readonly style="display:none;"></textarea>
+        </div>
+      </div>
+
+      <!-- RIGHT: User pastes JSON response -->
+      <div class="popup-right">
+        <div class="popup-pane-header">
+          <div>
+            <div class="popup-pane-title">Step 2 — Paste JSON Response</div>
+            <div class="pane-hint">Paste the JSON that Claude returned, then click Generate Page</div>
+          </div>
+        </div>
+        <div class="popup-pane-content">
+          <textarea id="jsonInput" placeholder='Paste the JSON response from Claude here...&#10;&#10;Expected format:&#10;{&#10;  "componentName": "...",&#10;  "variations": [...],&#10;  "edgeCases": [...]&#10;}'></textarea>
+        </div>
+        <div class="popup-footer">
+          <button class="btn-cancel-popup" onclick="closePopup()">Cancel</button>
+          <button class="btn-create-page" id="createPageBtn" onclick="submitCreatePage()">
+            Generate Page
+          </button>
+        </div>
+      </div>
+
+    </div><!-- end popup-body -->
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   showcase-dashboard.js
+   =============================================================
+   ARCHITECTURE OVERVIEW
+   ---------------------
+   The Generate button triggers a 2-step, human-in-the-loop flow:
+
+   STEP 1 — Get Prompt
+     POST /bin/showcase/generate  { action: "getPrompt", resourceType }
+     → Servlet reads the component's _cq_dialog/.content.xml and returns
+       a detailed prompt string.
+     → Popup opens; user sees the prompt on the LEFT pane.
+
+   STEP 2 — User Copies Prompt → Pastes into Claude → Gets JSON
+     The user manually copies the prompt, opens Claude (or ChatGPT),
+     pastes it, and gets back a JSON payload with all variations /
+     edge-cases derived from the dialog.
+
+   STEP 3 — Create Page
+     User pastes the JSON on the RIGHT pane and clicks "Generate Page".
+     POST /bin/showcase/generate  { action: "createPage", resourceType, variationsJson }
+     → Servlet parses the JSON and writes AEM JCR nodes under
+       /content/showcase/{componentName}.
+     → Dashboard row updates to "Up to date".
+
+   SERVLET ACTIONS (ShowcaseGeneratorServlet.java)
+     action=getPrompt   → { status, prompt }
+     action=createPage  → { status, showcasePath, editorUrl, variationCount, … }
+   ============================================================= */
+
+// ─── State ────────────────────────────────────────────────────────────────────
+// Holds the context for the currently open popup so both steps share it.
+var _popup = {
+  name:         null,   // component name, e.g. "teaser"
+  resourceType: null,   // e.g. "wknd/components/teaser"
+  row:          null,   // the dashboard table row element
+  prompt:       null    // the prompt string returned from the servlet
+};
+
+// ─── ROW SELECTION ────────────────────────────────────────────────────────────
 function selectRow(row) {
   const wasSelected = row.classList.contains('selected');
   document.querySelectorAll('.granite-row').forEach(r => r.classList.remove('selected'));
@@ -577,141 +870,207 @@ function toggleAll(master) {
       : row.classList.remove('selected'));
 }
 
-/* ---- FILTER ---- */
+// ─── FILTER & STATS ───────────────────────────────────────────────────────────
 function filterTable() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const s = document.getElementById('statusFilter').value;
   document.querySelectorAll('.granite-row').forEach(row => {
-    const name   = row.dataset.name || '';
-    const status = row.dataset.status || '';
-    const matchQ = !q || name.includes(q);
-    const matchS = !s || status === s;
+    const matchQ = !q || (row.dataset.name || '').includes(q);
+    const matchS = !s || row.dataset.status === s;
     row.style.display = matchQ && matchS ? '' : 'none';
   });
   updateStats();
 }
 
-/* ---- STATS ---- */
 function updateStats() {
   const rows = [...document.querySelectorAll('.granite-row')]
     .filter(r => r.style.display !== 'none');
-  document.getElementById('statTotal').textContent   = rows.length;
-  document.getElementById('statCurrent').textContent = rows.filter(r => r.dataset.status==='current').length;
-  document.getElementById('statOutdated').textContent= rows.filter(r => r.dataset.status==='outdated').length;
-  document.getElementById('statMissing').textContent = rows.filter(r => r.dataset.status==='not-generated').length;
+  document.getElementById('statTotal').textContent    = rows.length;
+  document.getElementById('statCurrent').textContent  = rows.filter(r => r.dataset.status === 'current').length;
+  document.getElementById('statOutdated').textContent = rows.filter(r => r.dataset.status === 'outdated').length;
+  document.getElementById('statMissing').textContent  = rows.filter(r => r.dataset.status === 'not-generated').length;
 }
 
-/* ---- GENERATE SINGLE COMPONENT ---- */
+// ─── STEP 1: OPEN POPUP & FETCH PROMPT ────────────────────────────────────────
+/**
+ * Called when the user clicks "Generate" on a component row.
+ * Calls the servlet with action=getPrompt to get the AI prompt,
+ * then opens the two-pane popup.
+ */
 function generateComponent(name, resourceType, btn) {
-  const row = btn.closest('.granite-row');
-  row.style.pointerEvents = 'none';
+  // Save context so the "Generate Page" button knows which component to act on
+  _popup.name         = name;
+  _popup.resourceType = resourceType;
+  _popup.row          = btn.closest('.granite-row');
+  _popup.prompt       = null;
 
-  /* Replace action cell content with progress */
-  const actionCell = btn.parentElement;
-  actionCell.innerHTML = `
-    <div style="min-width:120px;">
-      <div class="progress-label" id="prog-${name}">Reading dialog...</div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="bar-${name}"></div>
-      </div>
-    </div>
-  `;
+  // Update popup title
+  document.getElementById('popupTitle').textContent =
+    'Generate Showcase — ' + name.charAt(0).toUpperCase() + name.slice(1);
 
-  /* Simulate progress steps */
-  const steps = [
-    { pct: 20,  msg: 'Reading dialog XML...' },
-    { pct: 45,  msg: 'Calling AI agent...' },
-    { pct: 70,  msg: 'Generating variations...' },
-    { pct: 90,  msg: 'Creating AEM pages...' },
-    { pct: 100, msg: 'Done!' }
-  ];
+  // Reset both panes
+  document.getElementById('promptLoading').style.display = 'flex';
+  document.getElementById('promptText').style.display    = 'none';
+  document.getElementById('promptText').value            = '';
+  document.getElementById('jsonInput').value             = '';
+  document.getElementById('copyBtn').textContent         = 'Copy Prompt';
+  document.getElementById('copyBtn').classList.remove('copied');
+  document.getElementById('createPageBtn').disabled      = false;
 
-  let i = 0;
-  const tick = setInterval(() => {
-    if (i >= steps.length) {
-      clearInterval(tick);
-      onGenerateDone(row, name, resourceType);
-      return;
+  // Open popup
+  document.getElementById('promptPopup').classList.add('open');
+
+  // Call ShowcasePromptServlet to get the prompt
+  fetch('/bin/showcase/prompt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'resourceType=' + encodeURIComponent(resourceType)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      _popup.prompt = data.prompt;
+      document.getElementById('promptText').value = data.prompt;
+      document.getElementById('promptLoading').style.display = 'none';
+      document.getElementById('promptText').style.display    = 'block';
+    } else {
+      document.getElementById('promptLoading').innerHTML =
+        '<span style="color:#d7373f;">&#9888; Error: ' + (data.message || 'Unknown error') + '</span>';
     }
-    const bar  = document.getElementById(`bar-${name}`);
-    const prog = document.getElementById(`prog-${name}`);
-    if (bar)  bar.style.width  = steps[i].pct + '%';
-    if (prog) prog.textContent = steps[i].msg;
-    i++;
-  }, 700);
-
-  /*
-   * REAL IMPLEMENTATION — replace setTimeout simulation above with:
-   *
-   * fetch('/bin/showcase/generate', {
-   *   method: 'POST',
-   *   headers: {'Content-Type':'application/x-www-form-urlencoded'},
-   *   body: 'resourceType=' + encodeURIComponent(resourceType)
-   * })
-   * .then(r => r.json())
-   * .then(data => {
-   *   if (data.status === 'success') onGenerateDone(row, name, resourceType);
-   *   else showToast('Error: ' + data.message, 'error');
-   * });
-   */
+  })
+  .catch(err => {
+    document.getElementById('promptLoading').innerHTML =
+      '<span style="color:#d7373f;">&#9888; Network error: ' + err.message + '</span>';
+  });
 }
 
-function onGenerateDone(row, name, resourceType) {
-  row.dataset.status = 'current';
+// ─── POPUP CONTROLS ───────────────────────────────────────────────────────────
+function closePopup() {
+  document.getElementById('promptPopup').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  // Close if clicking the dark overlay (not the modal itself)
+  if (e.target === document.getElementById('promptPopup')) closePopup();
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptText').value;
+  if (!text) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy Prompt';
+      btn.classList.remove('copied');
+    }, 2500);
+  }).catch(() => {
+    // Fallback for browsers without clipboard API
+    document.getElementById('promptText').select();
+    document.execCommand('copy');
+    showToast('Prompt copied to clipboard', 'success');
+  });
+}
+
+// ─── STEP 3: SUBMIT JSON → CREATE AEM PAGE ────────────────────────────────────
+/**
+ * Called when the user clicks "Generate Page" after pasting the JSON.
+ * Calls the servlet with action=createPage + the pasted JSON.
+ */
+function submitCreatePage() {
+  const variationsJson = document.getElementById('jsonInput').value.trim();
+
+  if (!variationsJson) {
+    showToast('Paste the JSON response from Claude first', '');
+    return;
+  }
+
+  // Basic JSON validation before sending
+  try { JSON.parse(variationsJson); }
+  catch (e) {
+    showToast('Invalid JSON — check your paste: ' + e.message, '');
+    return;
+  }
+
+  const btn = document.getElementById('createPageBtn');
+  btn.disabled    = true;
+  btn.textContent = 'Creating page…';
+
+  // Call ShowcasePageCreatorServlet to write the JCR page
+  fetch('/bin/showcase/createPage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'resourceType='   + encodeURIComponent(_popup.resourceType)
+      + '&variationsJson='  + encodeURIComponent(variationsJson)
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled    = false;
+    btn.textContent = 'Generate Page';
+
+    if (data.status === 'success') {
+      closePopup();
+      onGenerateDone(_popup.row, _popup.name, _popup.resourceType, data);
+      showToast('Page created — ' + data.variationCount + ' variations!', 'success');
+    } else {
+      showToast('Error: ' + (data.message || 'Unknown error'), '');
+    }
+  })
+  .catch(err => {
+    btn.disabled    = false;
+    btn.textContent = 'Generate Page';
+    showToast('Network error: ' + err.message, '');
+  });
+}
+
+// ─── AFTER SUCCESSFUL PAGE CREATION ──────────────────────────────────────────
+/**
+ * Updates the dashboard row to "Up to date" and shows a View Showcase link.
+ * @param {HTMLElement} row
+ * @param {string} name
+ * @param {string} resourceType
+ * @param {object} data  — servlet response (has showcasePath, variationCount)
+ */
+function onGenerateDone(row, name, resourceType, data) {
+  data = data || {};
+  const count   = data.variationCount || '?';
+  const editor  = data.editorUrl  || ('/editor.html/content/showcase/' + name + '.html');
+
+  row.dataset.status     = 'current';
   row.style.pointerEvents = '';
 
-  /* Update status cell */
-  const cells = row.querySelectorAll('div > *');
-  const statusCell = row.children[5];
-  const actionCell = row.children[6];
+  row.children[5].innerHTML =
+    '<span class="badge badge-green">Up to date</span>'
+    + '<div style="font-size:11px;color:#909090;margin-top:2px;">Just now · ' + count + ' variations</div>';
 
-  statusCell.innerHTML = `
-    <span class="badge badge-green">Up to date</span>
-    <div style="font-size:11px;color:#909090;margin-top:2px;">Just now · 5 variations</div>
-  `;
+  row.children[6].innerHTML =
+    '<button class="btn-view"'
+    + ' onclick="event.stopPropagation(); viewShowcase(\'' + name + '\',\'' + resourceType + '\',\'' + editor + '\')">'
+    + 'View Showcase &rsaquo;</button>';
 
-  actionCell.innerHTML = `
-    <button class="btn-view"
-      onclick="event.stopPropagation();viewShowcase('${name}','${resourceType}')">
-      View Showcase ›
-    </button>
-  `;
-
-  showToast('Showcase generated for ' + name, 'success');
   updateStats();
 }
 
-/* ---- SYNC COMPONENT ---- */
+// ─── SYNC (OUTDATED) ─────────────────────────────────────────────────────────
+/**
+ * Sync re-uses the same popup flow — it's the same process for an outdated component.
+ */
 function syncComponent(name, resourceType, btn) {
-  const row = btn.closest('.granite-row');
-  btn.textContent = 'Syncing...';
-  btn.disabled = true;
-
-  setTimeout(() => {
-    onGenerateDone(row, name, resourceType);
-
-    /*
-     * REAL IMPLEMENTATION:
-     * fetch('/bin/showcase/sync', {
-     *   method: 'POST',
-     *   headers: {'Content-Type':'application/x-www-form-urlencoded'},
-     *   body: 'resourceType=' + encodeURIComponent(resourceType)
-     * })
-     * .then(r => r.json())
-     * .then(data => {
-     *   if (data.status === 'success') onGenerateDone(row, name, resourceType);
-     * });
-     */
-  }, 3000);
+  generateComponent(name, resourceType, btn);
 }
 
-/* ---- VIEW SHOWCASE ---- */
-function viewShowcase(name, resourceType) {
-  /* REAL: window.location.href = '/editor.html/content/showcase/' + name + '.html'; */
-  showToast('Opening showcase for ' + name + '...', 'success');
+// ─── VIEW SHOWCASE ────────────────────────────────────────────────────────────
+function viewShowcase(name, resourceType, editorUrl) {
+  if (editorUrl) {
+    window.open(editorUrl, '_blank');
+  } else {
+    showToast('Opening showcase for ' + name + '...', 'success');
+  }
 }
 
-/* ---- GENERATE ALL ---- */
+// ─── GENERATE ALL ─────────────────────────────────────────────────────────────
 function generateAll() {
   const missing = [...document.querySelectorAll('.granite-row')]
     .filter(r => r.dataset.status === 'not-generated');
@@ -721,26 +1080,26 @@ function generateAll() {
     return;
   }
 
+  // Trigger one-at-a-time with a small delay so prompts don't overlap
   missing.forEach((row, idx) => {
     const btn = row.querySelector('.btn-generate');
-    if (btn) {
-      setTimeout(() => btn.click(), idx * 500);
-    }
+    if (btn) setTimeout(() => btn.click(), idx * 800);
   });
 }
 
-/* ---- TOAST ---- */
+// ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'granite-toast' + (type ? ' ' + type : '');
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => t.classList.add('visible'));
-  });
-
-  setTimeout(() => t.classList.remove('visible'), 3000);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('visible')));
+  setTimeout(() => t.classList.remove('visible'), 3500);
 }
+
+// ─── KEYBOARD: Escape closes popup ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePopup();
+});
 </script>
 </body>
 </html>

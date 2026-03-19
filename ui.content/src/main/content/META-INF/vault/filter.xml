@@ -2,6 +2,7 @@
 <workspaceFilter version="1.0">
     <filter root="/conf/wknd" mode="merge"/>
     <filter root="/content/wknd" mode="merge"/>
+    <filter root="/content/library" mode="merge"/>
     <filter root="/content/dam/wknd" mode="merge"/>
     <filter root="/content/experience-fragments/wknd" mode="merge"/>
 </workspaceFilter>
