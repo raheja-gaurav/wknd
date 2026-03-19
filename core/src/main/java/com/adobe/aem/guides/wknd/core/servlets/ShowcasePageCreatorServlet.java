@@ -3,48 +3,39 @@ package com.adobe.aem.guides.wknd.core.servlets;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.servlets.annotations.SlingServletPaths;
 import org.json.JSONObject;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Servlet 2 of 2 — Page Creator
  *
  * Path : POST /bin/showcase/createPage
  *
- * What it does:
- *   1. Receives the JSON that the user got from Claude (pasted in the dashboard popup)
- *   2. Parses it (strips markdown fences if present, fills defaults)
- *   3. Writes the AEM showcase page to JCR under /content/showcase/{componentName}
- *   4. Returns the page path + editor URL
- *
- * Request params:
- *   resourceType    (required)  e.g. "wknd/components/teaser"
- *   variationsJson  (required)  the raw JSON string pasted by the user
- *
- * Response:
- *   {
- *     "status":         "success",
- *     "showcasePath":   "/content/showcase/teaser",
- *     "editorUrl":      "/editor.html/content/showcase/teaser.html",
- *     "previewUrl":     "/content/showcase/teaser.html",
- *     "variationCount": 5,
- *     "edgeCaseCount":  3
- *   }
- *   { "status": "error", "message": "..." }
+ * Uses the "showcase" service user (wknd-showcase-service) which has
+ * read/write access to /content/showcase for creating pages.
  */
 @Component(service = Servlet.class)
 @SlingServletPaths("/bin/showcase/createPage")
 public class ShowcasePageCreatorServlet extends SlingAllMethodsServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ShowcasePageCreatorServlet.class);
+
+    private static final String SUBSERVICE = "showcase";
+
+    @Reference
+    private ResourceResolverFactory resolverFactory;
 
     @Override
     protected void doPost(SlingHttpServletRequest request,
@@ -67,10 +58,13 @@ public class ShowcasePageCreatorServlet extends SlingAllMethodsServlet {
         }
 
         log.info("[ShowcasePageCreator] Creating page for: {}", resourceType);
-        ResourceResolver resolver = request.getResourceResolver();
 
-        try {
-            // 1. Parse the JSON that the user copied from Claude
+        Map<String, Object> authInfo = Collections.singletonMap(
+                ResourceResolverFactory.SUBSERVICE, SUBSERVICE);
+
+        try (ResourceResolver resolver = resolverFactory.getServiceResourceResolver(authInfo)) {
+
+            // 1. Parse JSON from Claude
             JSONObject variations = ShowcaseUtils.parseVariationsJson(variationsJson);
             log.info("[ShowcasePageCreator] Parsed {} variations, {} edge cases",
                     variations.getJSONArray("variations").length(),

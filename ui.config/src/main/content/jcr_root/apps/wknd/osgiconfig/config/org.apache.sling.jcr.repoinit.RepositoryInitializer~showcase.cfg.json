@@ -1,0 +1,7 @@
+{
+  "scripts": [
+    "create service user wknd-showcase-service",
+    "set ACL for wknd-showcase-service\n allow jcr:all on /apps/wknd \n end",
+    "set ACL for wknd-showcase-service\n allow jcr:all on /content \n end"
+  ]
+}

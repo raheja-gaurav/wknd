@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r mapping /c/Users/shubhgarg/Desktop/hack/shubha/wknd --include=*.config --include=*.cfg.json)",
+      "Bash(grep -r \"service.*user\\\\|serviceuser\\\\|principal\" /c/Users/shubhgarg/Desktop/hack/shubha/wknd/ui.apps/src/main/content/jcr_root/apps --include=*.xml)",
+      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f -name *.cfg.json -print)",
+      "Bash(xargs grep:*)",
+      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f \\\\\\(-name *.txt -o -name *.config -o -name *.cfg \\\\\\) -print)",
+      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f -name *.txt -print)"
+    ]
+  }
+}
