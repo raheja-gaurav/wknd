@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEM Component Showcase Dashboard</title>
+<style>
+/* =============================================
+   CLIENTLIB: css/showcase-dashboard.css
+   Category: wknd.showcase.dashboard
+   ============================================= */
+
+/* --- GRANITE SHELL HEADER --- */
+.showcase-shell {
+  background: #2c2c2c;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.shell-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.shell-logo {
+  width: 24px;
+  height: 24px;
+  background: #eb1000;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shell-logo svg { width: 14px; height: 14px; }
+.shell-product {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.2px;
+}
+.shell-env {
+  background: #268e6c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.shell-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.shell-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shell-icon:hover { background: rgba(255,255,255,0.1); }
+.shell-project {
+  color: #aaa;
+  font-size: 12px;
+  margin-right: 8px;
+}
+.shell-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1473e6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+
+/* --- CORAL BAR --- */
+.showcase-coral-bar {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #909090;
+}
+.breadcrumb .sep { color: #ccc; }
+.breadcrumb .current { color: #2c2c2c; font-weight: 400; }
+.coral-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.granite-search {
+  height: 32px;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 13px;
+  width: 200px;
+  color: #2c2c2c;
+  outline: none;
+  font-family: inherit;
+}
+.granite-search:focus { border-color: #1473e6; box-shadow: 0 0 0 1px #1473e6; }
+.granite-select {
+  height: 32px;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #2c2c2c;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary-granite {
+  height: 32px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-primary-granite:hover { background: #0d66d0; }
+
+/* --- MAIN CONTENT AREA --- */
+.showcase-content {
+  background: #f5f5f5;
+  min-height: calc(100vh - 104px);
+  padding: 24px;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* --- STATS BAR --- */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-chip {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  border-top: 3px solid;
+}
+.stat-chip.total  { border-top-color: #909090; }
+.stat-chip.green  { border-top-color: #268e6c; }
+.stat-chip.orange { border-top-color: #e68619; }
+.stat-chip.red    { border-top-color: #d7373f; }
+.stat-num {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+.stat-chip.total  .stat-num { color: #2c2c2c; }
+.stat-chip.green  .stat-num { color: #268e6c; }
+.stat-chip.orange .stat-num { color: #e68619; }
+.stat-chip.red    .stat-num { color: #d7373f; }
+.stat-label {
+  font-size: 11px;
+  color: #909090;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- GRANITE TABLE --- */
+.granite-table-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.granite-table-header {
+  display: grid;
+  grid-template-columns: 40px 48px 2fr 1.2fr 2fr 1fr 1.2fr;
+  padding: 0 16px;
+  height: 40px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  align-items: center;
+  gap: 8px;
+}
+.th-cell {
+  font-size: 11px;
+  font-weight: 700;
+  color: #909090;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.granite-row {
+  display: grid;
+  grid-template-columns: 40px 48px 2fr 1.2fr 2fr 1fr 1.2fr;
+  padding: 0 16px;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.1s;
+  cursor: pointer;
+}
+.granite-row:last-child { border-bottom: none; }
+.granite-row:hover { background: #f5f5f5; }
+.granite-row.selected {
+  background: #e8f0fc;
+  border-left: 3px solid #1473e6;
+}
+
+/* Component icon circle */
+.comp-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Cell text */
+.cell-title  { font-size: 14px; color: #2c2c2c; }
+.cell-sub    { font-size: 11px; color: #909090; font-family: 'Courier New', monospace; margin-top: 1px; }
+.cell-meta   { font-size: 12px; color: #909090; }
+.cell-warn   { font-size: 11px; color: #d7373f; margin-top: 2px; }
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.badge-green  { background: #edf9f0; color: #268e6c; border: 1px solid #c8edd6; }
+.badge-orange { background: #fef4e5; color: #e68619; border: 1px solid #fde8b8; }
+.badge-red    { background: #fef0f0; color: #d7373f; border: 1px solid #f9c8c8; }
+
+/* Action buttons */
+.btn-generate {
+  height: 28px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-generate:hover { background: #0d66d0; }
+.btn-sync {
+  height: 28px;
+  background: #fff;
+  color: #1473e6;
+  border: 1px solid #1473e6;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-sync:hover { background: #f0f6ff; }
+.btn-view {
+  background: none;
+  border: none;
+  color: #1473e6;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  text-decoration: none;
+}
+.btn-view:hover { text-decoration: underline; }
+
+/* Progress row */
+.progress-row {
+  display: grid;
+  grid-template-columns: 40px 48px 1fr;
+  padding: 0 16px;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 8px;
+  background: #f0f6ff;
+}
+.progress-bar-wrap {
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: #1473e6;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.progress-label {
+  font-size: 12px;
+  color: #1473e6;
+}
+
+/* Toast notification */
+.granite-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #2c2c2c;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.granite-toast.success { background: #268e6c; }
+.granite-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Checkbox */
+input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  accent-color: #1473e6;
+  cursor: pointer;
+}
+</style>
+</head>
+<body style="margin:0; padding:0; background:#f5f5f5;">
+
+<!-- =============================================
+     GRANITE SHELL HEADER
+     In AEM: this replaces with actual shell
+     ============================================= -->
+<header class="showcase-shell">
+  <div class="shell-left">
+    <div class="shell-logo">
+      <svg viewBox="0 0 100 100" fill="white">
+        <polygon points="50,5 95,95 5,95"/>
+      </svg>
+    </div>
+    <span class="shell-product">Adobe Experience Manager</span>
+    <span class="shell-env">DEV</span>
+  </div>
+  <div class="shell-right">
+    <span class="shell-project">WKND Project</span>
+    <button class="shell-icon" title="Search">&#128269;</button>
+    <button class="shell-icon" title="Help">&#63;</button>
+    <button class="shell-icon" title="Notifications">&#128276;</button>
+    <div class="shell-avatar">A</div>
+  </div>
+</header>
+
+<!-- =============================================
+     CORAL BAR
+     ============================================= -->
+<div class="showcase-coral-bar">
+  <nav class="breadcrumb">
+    <span>AEM</span>
+    <span class="sep">›</span>
+    <span>Tools</span>
+    <span class="sep">›</span>
+    <span class="current">Component Showcase</span>
+  </nav>
+  <div class="coral-bar-actions">
+    <input
+      type="text"
+      class="granite-search"
+      placeholder="Search components..."
+      id="searchInput"
+      oninput="filterTable()"
+    />
+    <select class="granite-select" id="statusFilter" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="not-generated">Not Generated</option>
+      <option value="outdated">Outdated</option>
+      <option value="current">Up to date</option>
+    </select>
+    <button class="btn-primary-granite" onclick="generateAll()">
+      Generate All Missing
+    </button>
+  </div>
+</div>
+
+<!-- =============================================
+     MAIN CONTENT
+     ============================================= -->
+<div class="showcase-content">
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-chip total">
+      <span class="stat-num" id="statTotal">3</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-chip green">
+      <span class="stat-num" id="statCurrent">1</span>
+      <span class="stat-label">Up to date</span>
+    </div>
+    <div class="stat-chip orange">
+      <span class="stat-num" id="statOutdated">1</span>
+      <span class="stat-label">Outdated</span>
+    </div>
+    <div class="stat-chip red">
+      <span class="stat-num" id="statMissing">1</span>
+      <span class="stat-label">Not Generated</span>
+    </div>
+  </div>
+
+  <!-- Component table -->
+  <div class="granite-table-card">
+
+    <!-- Table header -->
+    <div class="granite-table-header">
+      <div><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></div>
+      <div></div>
+      <div class="th-cell">Component</div>
+      <div class="th-cell">Group</div>
+      <div class="th-cell">Resource Type</div>
+      <div class="th-cell">Status</div>
+      <div class="th-cell">Action</div>
+    </div>
+
+    <!-- Table body -->
+    <div id="tableBody">
+
+      <!-- ROW 1 — Teaser — NOT GENERATED -->
+      <div class="granite-row" data-status="not-generated" data-name="teaser" onclick="selectRow(this)">
+        <div><input type="checkbox" onclick="event.stopPropagation()"></div>
+        <div>
+          <div class="comp-icon" style="background:#2d9d78;">T</div>
+        </div>
+        <div>
+          <div class="cell-title">Teaser</div>
+          <div class="cell-sub">wknd/components/teaser</div>
+        </div>
+        <div class="cell-meta">WKND — Content</div>
+        <div class="cell-meta" style="font-family:monospace; font-size:11px;">/apps/wknd/components/teaser</div>
+        <div>
+          <span class="badge badge-red">Not generated</span>
+        </div>
+        <div>
+          <button
+            class="btn-generate"
+            onclick="event.stopPropagation(); generateComponent('teaser', 'wknd/components/teaser', this)">
+            Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- ROW 2 — Button — OUTDATED -->
+      <div class="granite-row" data-status="outdated" data-name="button" onclick="selectRow(this)">
+        <div><input type="checkbox" onclick="event.stopPropagation()"></div>
+        <div>
+          <div class="comp-icon" style="background:#1473e6;">B</div>
+        </div>
+        <div>
+          <div class="cell-title">Button</div>
+          <div class="cell-sub">wknd/components/button</div>
+        </div>
+        <div class="cell-meta">WKND — Content</div>
+        <div class="cell-meta" style="font-family:monospace; font-size:11px;">/apps/wknd/components/button</div>
+        <div>
+          <div><span class="badge badge-orange">Outdated</span></div>
+          <div class="cell-warn">New field: buttonVariant</div>
+        </div>
+        <div>
+          <button
+            class="btn-sync"
+            onclick="event.stopPropagation(); syncComponent('button', 'wknd/components/button', this)">
+            Sync
+          </button>
+        </div>
+      </div>
+
+      <!-- ROW 3 — Title — CURRENT -->
+      <div class="granite-row" data-status="current" data-name="title" onclick="selectRow(this)">
+        <div><input type="checkbox" onclick="event.stopPropagation()"></div>
+        <div>
+          <div class="comp-icon" style="background:#7e4bf4;">T</div>
+        </div>
+        <div>
+          <div class="cell-title">Title</div>
+          <div class="cell-sub">wknd/components/title</div>
+        </div>
+        <div class="cell-meta">WKND — Content</div>
+        <div class="cell-meta" style="font-family:monospace; font-size:11px;">/apps/wknd/components/title</div>
+        <div>
+          <span class="badge badge-green">Up to date</span>
+          <div style="font-size:11px; color:#909090; margin-top:2px;">Today, 10:32am · 5 variations</div>
+        </div>
+        <div>
+          <button
+            class="btn-view"
+            onclick="event.stopPropagation(); viewShowcase('title', 'wknd/components/title')">
+            View Showcase ›
+          </button>
+        </div>
+      </div>
+
+    </div><!-- end tableBody -->
+  </div><!-- end granite-table-card -->
+
+</div><!-- end showcase-content -->
+
+<!-- Toast notification -->
+<div class="granite-toast" id="toast"></div>
+
+<script>
+/* =============================================
+   CLIENTLIB: js/showcase-dashboard.js
+   Category: wknd.showcase.dashboard
+   ============================================= */
+
+/* ---- ROW SELECTION ---- */
+function selectRow(row) {
+  const wasSelected = row.classList.contains('selected');
+  document.querySelectorAll('.granite-row').forEach(r => r.classList.remove('selected'));
+  if (!wasSelected) row.classList.add('selected');
+}
+
+function toggleAll(master) {
+  document.querySelectorAll('#tableBody input[type=checkbox]')
+    .forEach(cb => cb.checked = master.checked);
+  document.querySelectorAll('.granite-row')
+    .forEach(row => master.checked
+      ? row.classList.add('selected')
+      : row.classList.remove('selected'));
+}
+
+/* ---- FILTER ---- */
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const s = document.getElementById('statusFilter').value;
+  document.querySelectorAll('.granite-row').forEach(row => {
+    const name   = row.dataset.name || '';
+    const status = row.dataset.status || '';
+    const matchQ = !q || name.includes(q);
+    const matchS = !s || status === s;
+    row.style.display = matchQ && matchS ? '' : 'none';
+  });
+  updateStats();
+}
+
+/* ---- STATS ---- */
+function updateStats() {
+  const rows = [...document.querySelectorAll('.granite-row')]
+    .filter(r => r.style.display !== 'none');
+  document.getElementById('statTotal').textContent   = rows.length;
+  document.getElementById('statCurrent').textContent = rows.filter(r => r.dataset.status==='current').length;
+  document.getElementById('statOutdated').textContent= rows.filter(r => r.dataset.status==='outdated').length;
+  document.getElementById('statMissing').textContent = rows.filter(r => r.dataset.status==='not-generated').length;
+}
+
+/* ---- GENERATE SINGLE COMPONENT ---- */
+function generateComponent(name, resourceType, btn) {
+  const row = btn.closest('.granite-row');
+  row.style.pointerEvents = 'none';
+
+  /* Replace action cell content with progress */
+  const actionCell = btn.parentElement;
+  actionCell.innerHTML = `
+    <div style="min-width:120px;">
+      <div class="progress-label" id="prog-${name}">Reading dialog...</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="bar-${name}"></div>
+      </div>
+    </div>
+  `;
+
+  /* Simulate progress steps */
+  const steps = [
+    { pct: 20,  msg: 'Reading dialog XML...' },
+    { pct: 45,  msg: 'Calling AI agent...' },
+    { pct: 70,  msg: 'Generating variations...' },
+    { pct: 90,  msg: 'Creating AEM pages...' },
+    { pct: 100, msg: 'Done!' }
+  ];
+
+  let i = 0;
+  const tick = setInterval(() => {
+    if (i >= steps.length) {
+      clearInterval(tick);
+      onGenerateDone(row, name, resourceType);
+      return;
+    }
+    const bar  = document.getElementById(`bar-${name}`);
+    const prog = document.getElementById(`prog-${name}`);
+    if (bar)  bar.style.width  = steps[i].pct + '%';
+    if (prog) prog.textContent = steps[i].msg;
+    i++;
+  }, 700);
+
+  /*
+   * REAL IMPLEMENTATION — replace setTimeout simulation above with:
+   *
+   * fetch('/bin/showcase/generate', {
+   *   method: 'POST',
+   *   headers: {'Content-Type':'application/x-www-form-urlencoded'},
+   *   body: 'resourceType=' + encodeURIComponent(resourceType)
+   * })
+   * .then(r => r.json())
+   * .then(data => {
+   *   if (data.status === 'success') onGenerateDone(row, name, resourceType);
+   *   else showToast('Error: ' + data.message, 'error');
+   * });
+   */
+}
+
+function onGenerateDone(row, name, resourceType) {
+  row.dataset.status = 'current';
+  row.style.pointerEvents = '';
+
+  /* Update status cell */
+  const cells = row.querySelectorAll('div > *');
+  const statusCell = row.children[5];
+  const actionCell = row.children[6];
+
+  statusCell.innerHTML = `
+    <span class="badge badge-green">Up to date</span>
+    <div style="font-size:11px;color:#909090;margin-top:2px;">Just now · 5 variations</div>
+  `;
+
+  actionCell.innerHTML = `
+    <button class="btn-view"
+      onclick="event.stopPropagation();viewShowcase('${name}','${resourceType}')">
+      View Showcase ›
+    </button>
+  `;
+
+  showToast('Showcase generated for ' + name, 'success');
+  updateStats();
+}
+
+/* ---- SYNC COMPONENT ---- */
+function syncComponent(name, resourceType, btn) {
+  const row = btn.closest('.granite-row');
+  btn.textContent = 'Syncing...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    onGenerateDone(row, name, resourceType);
+
+    /*
+     * REAL IMPLEMENTATION:
+     * fetch('/bin/showcase/sync', {
+     *   method: 'POST',
+     *   headers: {'Content-Type':'application/x-www-form-urlencoded'},
+     *   body: 'resourceType=' + encodeURIComponent(resourceType)
+     * })
+     * .then(r => r.json())
+     * .then(data => {
+     *   if (data.status === 'success') onGenerateDone(row, name, resourceType);
+     * });
+     */
+  }, 3000);
+}
+
+/* ---- VIEW SHOWCASE ---- */
+function viewShowcase(name, resourceType) {
+  /* REAL: window.location.href = '/editor.html/content/showcase/' + name + '.html'; */
+  showToast('Opening showcase for ' + name + '...', 'success');
+}
+
+/* ---- GENERATE ALL ---- */
+function generateAll() {
+  const missing = [...document.querySelectorAll('.granite-row')]
+    .filter(r => r.dataset.status === 'not-generated');
+
+  if (missing.length === 0) {
+    showToast('All components are up to date');
+    return;
+  }
+
+  missing.forEach((row, idx) => {
+    const btn = row.querySelector('.btn-generate');
+    if (btn) {
+      setTimeout(() => btn.click(), idx * 500);
+    }
+  });
+}
+
+/* ---- TOAST ---- */
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'granite-toast' + (type ? ' ' + type : '');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => t.classList.add('visible'));
+  });
+
+  setTimeout(() => t.classList.remove('visible'), 3000);
+}
+</script>
+</body>
+</html>
