@@ -845,6 +845,58 @@ input[type=checkbox] {
      action=createPage  → { status, showcasePath, editorUrl, variationCount, … }
    ============================================================= */
 
+// ─── CSRF Token ───────────────────────────────────────────────────────────────
+// AEM requires a CSRF token for all POST requests. We fetch it once and cache it.
+// If the token expires, we re-fetch on the next call.
+var _csrfToken = null;
+
+/**
+ * Fetches CSRF token from AEM's Granite endpoint.
+ * Returns a Promise that resolves to the token string.
+ */
+function getCsrfToken() {
+  if (_csrfToken) return Promise.resolve(_csrfToken);
+  return fetch('/libs/granite/csrf/token.json', { credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { _csrfToken = data.token; return _csrfToken; });
+}
+
+/**
+ * Wrapper for POST requests that automatically includes the CSRF token.
+ * Usage:  postWithCsrf('/bin/showcase/prompt', 'resourceType=foo')
+ *           .then(r => r.json())
+ */
+function postWithCsrf(url, body) {
+  return getCsrfToken().then(function(token) {
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'CSRF-Token': token
+      },
+      body: body
+    }).then(function(r) {
+      // If CSRF token expired, clear cache and retry once
+      if (r.status === 403 || r.status === 500) {
+        _csrfToken = null;
+        return getCsrfToken().then(function(newToken) {
+          return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'CSRF-Token': newToken
+            },
+            body: body
+          });
+        });
+      }
+      return r;
+    });
+  });
+}
+
 // ─── State ────────────────────────────────────────────────────────────────────
 // Holds the context for the currently open popup so both steps share it.
 var _popup = {
@@ -921,11 +973,7 @@ function generateComponent(name, resourceType, btn) {
   document.getElementById('promptPopup').classList.add('open');
 
   // Call ShowcasePromptServlet to get the prompt
-  fetch('/bin/showcase/prompt', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'resourceType=' + encodeURIComponent(resourceType)
-  })
+  postWithCsrf('/bin/showcase/prompt', 'resourceType=' + encodeURIComponent(resourceType))
   .then(r => r.json())
   .then(data => {
     if (data.status === 'success') {
@@ -999,12 +1047,9 @@ function submitCreatePage() {
   btn.textContent = 'Creating page…';
 
   // Call ShowcasePageCreatorServlet to write the JCR page
-  fetch('/bin/showcase/createPage', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'resourceType='   + encodeURIComponent(_popup.resourceType)
-      + '&variationsJson='  + encodeURIComponent(variationsJson)
-  })
+  postWithCsrf('/bin/showcase/createPage',
+      'resourceType='   + encodeURIComponent(_popup.resourceType)
+    + '&variationsJson=' + encodeURIComponent(variationsJson))
   .then(r => r.json())
   .then(data => {
     btn.disabled    = false;
