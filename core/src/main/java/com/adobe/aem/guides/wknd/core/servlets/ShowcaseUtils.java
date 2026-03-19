@@ -10,47 +10,40 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
+import java.util.Iterator;
 
 /**
  * Shared utilities for the Showcase servlet pair.
  *
- * Used by:
- *   ShowcasePromptServlet      (/bin/showcase/prompt)     — reads dialog, returns prompt
- *   ShowcasePageCreatorServlet (/bin/showcase/createPage)  — parses JSON, writes JCR page
+ * ShowcasePromptServlet      (/bin/showcase/prompt)     — reads dialog, builds prompt
+ * ShowcasePageCreatorServlet (/bin/showcase/createPage)  — imports page JSON into JCR
  */
 public final class ShowcaseUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ShowcaseUtils.class);
 
-    /** Root path where showcase pages are created. */
     public static final String SHOWCASE_ROOT = "/content/showcase";
 
     private ShowcaseUtils() {}
 
     // ─────────────────────────────────────────────────────────────────────────
-    // READ DIALOG AS JSON
-    // Reads /apps/{resourceType}/cq:dialog node tree from JCR and converts
-    // it to JSON — same structure as AEM's cq:dialog.infinity.json endpoint.
-    // Returns null if no dialog exists for this component.
+    // READ DIALOG AS JSON from JCR node tree
     // ─────────────────────────────────────────────────────────────────────────
     public static String readDialogXML(ResourceResolver resolver, String resourceType) {
         try {
-            // In JCR the node is "cq:dialog" (colon in name)
             String dialogPath = "/apps/" + resourceType + "/cq:dialog";
             Resource dialogResource = resolver.getResource(dialogPath);
 
-            // Fallback: try the on-disk vault name just in case
             if (dialogResource == null) {
                 dialogPath = "/apps/" + resourceType + "/_cq_dialog";
                 dialogResource = resolver.getResource(dialogPath);
             }
 
             if (dialogResource == null) {
-                log.warn("[ShowcaseUtils] Dialog not found for resourceType: {}", resourceType);
+                log.warn("[ShowcaseUtils] Dialog not found for: {}", resourceType);
                 return null;
             }
 
-            // Recursively convert the entire node tree to JSON
             JSONObject dialogJson = resourceToJson(dialogResource);
             String json = dialogJson.toString(2);
             log.info("[ShowcaseUtils] Dialog JSON for {} — {} chars", resourceType, json.length());
@@ -62,15 +55,10 @@ public final class ShowcaseUtils {
         }
     }
 
-    /**
-     * Recursively converts a Sling Resource and all its children into a JSONObject.
-     * Produces the same structure as AEM's .infinity.json servlet.
-     */
     private static JSONObject resourceToJson(Resource resource) {
         JSONObject obj = new JSONObject();
         ValueMap props = resource.getValueMap();
 
-        // Copy all properties — skip internal timestamps to keep the prompt concise
         for (String key : props.keySet()) {
             if (key.startsWith("jcr:created") || key.startsWith("jcr:lastModified")
                     || key.equals("jcr:uuid")) {
@@ -84,7 +72,6 @@ public final class ShowcaseUtils {
             }
         }
 
-        // Recurse into child nodes
         for (Resource child : resource.getChildren()) {
             obj.put(child.getName(), resourceToJson(child));
         }
@@ -93,129 +80,125 @@ public final class ShowcaseUtils {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // READ SHOWCASE CONFIG JSON
-    // Optional file at /apps/{resourceType}/showcase-config.json.
-    // Returns empty JSONObject when not found — servlet still works fine.
+    // READ SHOWCASE CONFIG (optional, for future use)
     // ─────────────────────────────────────────────────────────────────────────
     public static JSONObject readShowcaseConfig(ResourceResolver resolver, String resourceType) {
-        // For now just return empty — can be extended later
         return new JSONObject();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // BUILD AI PROMPT
-    // Combines dialog JSON + optional config into the prompt shown to the user.
+    // Instructs Claude to return a full AEM page-importable JSON that can
+    // be written directly into JCR via the content import API.
     // ─────────────────────────────────────────────────────────────────────────
     public static String buildPrompt(String dialogJson, JSONObject config, String resourceType) {
+        String componentName = extractComponentName(resourceType);
+
         StringBuilder p = new StringBuilder();
 
-        p.append("You are an AEM (Adobe Experience Manager) expert.\n");
-        p.append("Generate a component showcase for the following AEM component.\n");
-        p.append("Return ONLY valid JSON. No markdown. No explanation. Just JSON.\n\n");
+        p.append("You are an AEM (Adobe Experience Manager) expert content architect.\n\n");
+
+        p.append("TASK: Generate a showcase page for the AEM component below. ");
+        p.append("The page should demonstrate 5 realistic variations of this component ");
+        p.append("so that authors and developers can see every possible usage.\n\n");
 
         p.append("COMPONENT RESOURCE TYPE: ").append(resourceType).append("\n");
-        if (config.has("component"))   p.append("COMPONENT NAME: ").append(config.getString("component")).append("\n");
-        if (config.has("description")) p.append("COMPONENT PURPOSE: ").append(config.getString("description")).append("\n");
-        p.append("\n");
+        p.append("COMPONENT NAME: ").append(componentName).append("\n\n");
 
-        p.append("COMPONENT DIALOG JSON (this is the cq:dialog node tree — all the fields authors can configure):\n");
+        p.append("COMPONENT DIALOG JSON (cq:dialog node tree — these are ALL the fields an author can configure):\n");
         p.append("```json\n").append(dialogJson).append("\n```\n\n");
 
-        if (config.has("assetPaths")) {
-            p.append("USE THESE REAL AEM ASSET PATHS IN YOUR CONTENT:\n");
-            JSONObject assets = config.getJSONObject("assetPaths");
-            assets.keys().forEachRemaining(k -> p.append("  ").append(k).append(": ").append(assets.getString(k)).append("\n"));
-            p.append("\n");
-        }
+        // ── Output format instructions ──────────────────────────────────────
+        p.append("RETURN a single JSON array containing exactly ONE object — a complete AEM page structure.\n");
+        p.append("This JSON will be imported directly into AEM's JCR repository.\n\n");
 
-        if (config.has("brandGuidelines")) {
-            p.append("BRAND GUIDELINES:\n");
-            JSONObject brand = config.getJSONObject("brandGuidelines");
-            brand.keys().forEachRemaining(k -> p.append("  ").append(k).append(": ").append(brand.get(k)).append("\n"));
-            p.append("\n");
-        }
-
-        if (config.has("variationHints")) {
-            p.append("VARIATION HINTS (follow these):\n");
-            config.getJSONArray("variationHints").forEach(h -> p.append("  - ").append(h).append("\n"));
-            p.append("\n");
-        }
-
-        if (config.has("edgeCaseHints")) {
-            p.append("EDGE CASE HINTS (follow these):\n");
-            config.getJSONArray("edgeCaseHints").forEach(h -> p.append("  - ").append(h).append("\n"));
-            p.append("\n");
-        }
-
-        if (config.has("fieldNotes")) {
-            p.append("FIELD NOTES:\n");
-            JSONObject notes = config.getJSONObject("fieldNotes");
-            notes.keys().forEachRemaining(k -> p.append("  ").append(k).append(": ").append(notes.getString(k)).append("\n"));
-            p.append("\n");
-        }
-
-        p.append("REQUIRED OUTPUT FORMAT (strict JSON, no deviations):\n");
-        p.append("{\n");
-        p.append("  \"componentName\": \"string\",\n");
-        p.append("  \"description\": \"one sentence what this component does\",\n");
-        p.append("  \"variations\": [\n");
-        p.append("    {\n");
-        p.append("      \"id\": \"v1\",\n");
-        p.append("      \"label\": \"Short descriptive name\",\n");
-        p.append("      \"description\": \"When an author would use this\",\n");
-        p.append("      \"fields\": { \"fieldName\": \"value\" }\n");
+        p.append("EXACT STRUCTURE (follow this precisely):\n");
+        p.append("```json\n");
+        p.append("[\n");
+        p.append("  {\n");
+        p.append("    \"jcr:primaryType\": \"cq:Page\",\n");
+        p.append("    \"jcr:content\": {\n");
+        p.append("      \"jcr:primaryType\": \"cq:PageContent\",\n");
+        p.append("      \"jcr:title\": \"").append(componentName).append(" Showcase\",\n");
+        p.append("      \"cq:template\": \"/conf/wknd/settings/wcm/templates/landing-page-template\",\n");
+        p.append("      \"jcr:description\": \"Auto-generated showcase of all ").append(componentName).append(" component variations\",\n");
+        p.append("      \"sling:resourceType\": \"wknd/components/page\",\n");
+        p.append("      \"root\": {\n");
+        p.append("        \"jcr:primaryType\": \"nt:unstructured\",\n");
+        p.append("        \"sling:resourceType\": \"wknd/components/container\",\n");
+        p.append("        \"container\": {\n");
+        p.append("          \"jcr:primaryType\": \"nt:unstructured\",\n");
+        p.append("          \"layout\": \"responsiveGrid\",\n");
+        p.append("          \"sling:resourceType\": \"wknd/components/container\",\n");
+        p.append("          ... YOUR COMPONENTS GO HERE ...\n");
+        p.append("        }\n");
+        p.append("      }\n");
         p.append("    }\n");
-        p.append("  ],\n");
-        p.append("  \"edgeCases\": [\n");
-        p.append("    {\n");
-        p.append("      \"id\": \"e1\",\n");
-        p.append("      \"label\": \"Edge case name\",\n");
-        p.append("      \"issue\": \"What might break and why\",\n");
-        p.append("      \"severity\": \"red\",\n");
-        p.append("      \"fields\": { \"fieldName\": \"value\" }\n");
-        p.append("    }\n");
-        p.append("  ]\n");
-        p.append("}\n\n");
-        p.append("Rules:\n");
-        p.append("- Maximum 5 variations\n");
-        p.append("- Maximum 3 edge cases\n");
-        p.append("- Use ONLY field \"name\" properties that exist in the dialog JSON above\n");
-        p.append("- The \"fields\" object keys must match the JCR property names from the dialog (the \"name\" attributes like ./jcr:title, ./pretitle, etc.)\n");
-        p.append("- Strip the leading ./ from field names in your output (e.g. use \"jcr:title\" not \"./jcr:title\")\n");
-        p.append("- Use real asset paths from config if provided\n");
-        p.append("- Generate realistic enterprise website content\n");
-        p.append("- No lorem ipsum\n");
+        p.append("  }\n");
+        p.append("]\n");
+        p.append("```\n\n");
+
+        // ── Component generation rules ──────────────────────────────────────
+        p.append("INSIDE the \"container\" object, generate these child nodes:\n\n");
+
+        p.append("For EACH variation (generate 5 variations):\n");
+        p.append("  1. A heading node: \"heading_N\" with:\n");
+        p.append("     - \"jcr:primaryType\": \"nt:unstructured\"\n");
+        p.append("     - \"jcr:title\": \"Descriptive Variation Name\"\n");
+        p.append("     - \"type\": \"h2\"\n");
+        p.append("     - \"sling:resourceType\": \"wknd/components/title\"\n\n");
+
+        p.append("  2. A description node: \"desc_N\" with:\n");
+        p.append("     - \"jcr:primaryType\": \"nt:unstructured\"\n");
+        p.append("     - \"text\": \"<p><em>Brief explanation of when to use this variation</em></p>\"\n");
+        p.append("     - \"sling:resourceType\": \"wknd/components/text\"\n");
+        p.append("     - \"textIsRich\": \"true\"\n\n");
+
+        p.append("  3. The actual component node: \"component_N\" with:\n");
+        p.append("     - \"jcr:primaryType\": \"nt:unstructured\"\n");
+        p.append("     - \"sling:resourceType\": \"").append(resourceType).append("\"\n");
+        p.append("     - All relevant dialog fields populated with realistic content\n\n");
+
+        p.append("  4. A separator node: \"separator_N\" with:\n");
+        p.append("     - \"jcr:primaryType\": \"nt:unstructured\"\n");
+        p.append("     - \"sling:resourceType\": \"wknd/components/separator\"\n\n");
+
+        p.append("FIELD RULES:\n");
+        p.append("- Look at the dialog JSON for field \"name\" properties (e.g. \"./jcr:title\", \"./pretitle\")\n");
+        p.append("- Strip the leading \"./\" prefix (use \"jcr:title\" not \"./jcr:title\")\n");
+        p.append("- For rich text fields, wrap content in <p> tags\n");
+        p.append("- For boolean fields (checkboxes), use string \"true\" or \"false\"\n");
+        p.append("- For image fields (fileReference), use real WKND DAM paths like:\n");
+        p.append("  /content/dam/wknd-shared/en/magazine/western-australia/western-australia-by-702010-702010.jpg\n");
+        p.append("  /content/dam/wknd-shared/en/magazine/san-diego-surf-spots/adobestock-272184938.jpeg\n");
+        p.append("  /content/dam/wknd-shared/en/magazine/arctic-702010-702010/aloha-702010-702010.jpg\n");
+        p.append("- For link fields, use paths like /content/wknd/language-masters/en/about-us\n\n");
+
+        p.append("VARIATION STRATEGY — make each variation meaningfully different:\n");
+        p.append("  Variation 0: Full-featured — ALL fields populated (hero/showcase use case)\n");
+        p.append("  Variation 1: Minimal — Only required fields (clean/simple use case)\n");
+        p.append("  Variation 2: With actions/CTAs enabled if the component supports it\n");
+        p.append("  Variation 3: Content inherited from linked page (if supported)\n");
+        p.append("  Variation 4: Edge case — very long text, missing optional fields, etc.\n\n");
+
+        p.append("CONTENT RULES:\n");
+        p.append("- Generate realistic enterprise website content (travel, outdoor adventure theme for WKND)\n");
+        p.append("- No lorem ipsum — use real-sounding headlines and descriptions\n");
+        p.append("- Each variation must have different content, not just different field combinations\n\n");
+
+        p.append("Return ONLY the JSON array. No markdown fences. No explanation. Just valid JSON.\n");
 
         return p.toString();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PARSE AI / USER JSON RESPONSE
-    // Strips markdown fences if Claude wrapped the JSON in them.
-    // Ensures required top-level keys exist so page creation never NPEs.
-    // ─────────────────────────────────────────────────────────────────────────
-    public static JSONObject parseVariationsJson(String raw) {
-        String cleaned = raw.trim();
-        if (cleaned.startsWith("```json")) cleaned = cleaned.substring(7);
-        else if (cleaned.startsWith("```"))  cleaned = cleaned.substring(3);
-        if (cleaned.endsWith("```"))         cleaned = cleaned.substring(0, cleaned.length() - 3);
-        cleaned = cleaned.trim();
-
-        JSONObject parsed = new JSONObject(cleaned);
-        if (!parsed.has("variations"))    parsed.put("variations",    new JSONArray());
-        if (!parsed.has("edgeCases"))     parsed.put("edgeCases",     new JSONArray());
-        if (!parsed.has("componentName")) parsed.put("componentName", "Component");
-        if (!parsed.has("description"))   parsed.put("description",   "");
-        return parsed;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // CREATE SHOWCASE PAGE IN AEM
-    // Writes variations + edge cases as JCR nodes under /content/showcase.
+    // IMPORT PAGE JSON INTO JCR
+    // Takes the full page-importable JSON from Claude and writes it into JCR.
+    // The JSON is the array format: [ { "jcr:primaryType": "cq:Page", ... } ]
     // ─────────────────────────────────────────────────────────────────────────
     public static String createShowcasePage(ResourceResolver resolver,
                                             String resourceType,
-                                            JSONObject variations) throws Exception {
+                                            String pageJson) throws Exception {
         Session session = resolver.adaptTo(Session.class);
         if (session == null) throw new RuntimeException("Could not get JCR Session");
 
@@ -223,100 +206,94 @@ public final class ShowcaseUtils {
         String pageNodeName  = componentName.toLowerCase().replaceAll("[^a-z0-9]", "-");
         String pagePath      = SHOWCASE_ROOT + "/" + pageNodeName;
 
-        // Ensure /content/showcase root page exists
+        // Ensure /content/showcase exists
         ensureNode(session, SHOWCASE_ROOT, "cq:Page");
-        Node showcaseRoot   = session.getNode(SHOWCASE_ROOT);
-        Node jcrContentRoot = getOrCreateNode(showcaseRoot, "jcr:content", "cq:PageContent");
-        jcrContentRoot.setProperty("jcr:title", "Component Showcase");
-        jcrContentRoot.setProperty("sling:resourceType", "wknd/components/page");
-
-        // Remove old page if it exists (re-generate = overwrite)
-        if (session.nodeExists(pagePath)) session.getNode(pagePath).remove();
-
-        // Create component showcase page
-        Node pageNode    = showcaseRoot.addNode(pageNodeName, "cq:Page");
-        Node pageContent = pageNode.addNode("jcr:content", "cq:PageContent");
-        pageContent.setProperty("jcr:title",              variations.getString("componentName") + " — Showcase");
-        pageContent.setProperty("sling:resourceType",     "wknd/components/page");
-        pageContent.setProperty("showcase:resourceType",  resourceType);
-        pageContent.setProperty("showcase:description",   variations.getString("description"));
-        pageContent.setProperty("showcase:generatedAt",   java.time.Instant.now().toString());
-
-        // Root layout container
-        Node root = pageContent.addNode("root", "nt:unstructured");
-        root.setProperty("sling:resourceType", "wcm/foundation/components/responsivegrid");
-
-        // ── Variations ───────────────────────────────────────────────────────
-        JSONArray varArray = variations.getJSONArray("variations");
-        for (int i = 0; i < varArray.length(); i++) {
-            JSONObject v = varArray.getJSONObject(i);
-
-            // Label heading
-            Node heading = root.addNode("heading_v" + i, "nt:unstructured");
-            heading.setProperty("sling:resourceType",           "core/wcm/components/title/v2/title");
-            heading.setProperty("jcr:title",                    v.getString("label"));
-            heading.setProperty("type",                         "h2");
-            heading.setProperty("showcase:variationDescription", v.getString("description"));
-
-            // Component instance with all configured fields
-            Node comp = root.addNode("component_v" + i, "nt:unstructured");
-            comp.setProperty("sling:resourceType",  resourceType);
-            comp.setProperty("showcase:variationId", v.getString("id"));
-            setFields(comp, v.getJSONObject("fields"));
+        Node showcaseRoot = session.getNode(SHOWCASE_ROOT);
+        if (!showcaseRoot.hasNode("jcr:content")) {
+            Node rc = showcaseRoot.addNode("jcr:content", "cq:PageContent");
+            rc.setProperty("jcr:title", "Component Showcase");
+            rc.setProperty("sling:resourceType", "wknd/components/page");
+            session.save();
         }
 
-        // ── Edge Cases ───────────────────────────────────────────────────────
-        if (varArray.length() > 0) {
-            Node divider = root.addNode("heading_edge", "nt:unstructured");
-            divider.setProperty("sling:resourceType", "core/wcm/components/title/v2/title");
-            divider.setProperty("jcr:title", "Edge Cases");
-            divider.setProperty("type", "h2");
+        // Remove old page if exists
+        if (session.nodeExists(pagePath)) {
+            session.getNode(pagePath).remove();
+            session.save();
         }
 
-        JSONArray edgeArray = variations.getJSONArray("edgeCases");
-        for (int i = 0; i < edgeArray.length(); i++) {
-            JSONObject e = edgeArray.getJSONObject(i);
+        // Parse the JSON array — take the first element
+        JSONArray arr = new JSONArray(pageJson);
+        JSONObject pageObj = arr.getJSONObject(0);
 
-            Node edgeHeading = root.addNode("heading_e" + i, "nt:unstructured");
-            edgeHeading.setProperty("sling:resourceType", "core/wcm/components/title/v2/title");
-            edgeHeading.setProperty("jcr:title", "⚠ " + e.getString("label"));
-            edgeHeading.setProperty("type", "h3");
-
-            Node edgeComp = root.addNode("edge_e" + i, "nt:unstructured");
-            edgeComp.setProperty("sling:resourceType",   resourceType);
-            edgeComp.setProperty("showcase:edgeCaseId",  e.getString("id"));
-            edgeComp.setProperty("showcase:issue",       e.getString("issue"));
-            edgeComp.setProperty("showcase:severity",    e.getString("severity"));
-            setFields(edgeComp, e.getJSONObject("fields"));
-        }
+        // Create the page node tree recursively
+        writeJsonToJcr(showcaseRoot, pageNodeName, pageObj, session);
 
         session.save();
-        log.info("[ShowcaseUtils] Page saved at: {}", pagePath);
+        log.info("[ShowcaseUtils] Page imported at: {}", pagePath);
         return pagePath;
+    }
+
+    /**
+     * Recursively writes a JSONObject as a JCR node with properties and children.
+     */
+    private static void writeJsonToJcr(Node parent, String nodeName, JSONObject json, Session session) throws Exception {
+        // Determine node type
+        String primaryType = json.optString("jcr:primaryType", "nt:unstructured");
+
+        Node node;
+        if (parent.hasNode(nodeName)) {
+            node = parent.getNode(nodeName);
+        } else {
+            node = parent.addNode(nodeName, primaryType);
+        }
+
+        // Set properties
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object val = json.get(key);
+
+            // Skip — child nodes are JSONObjects, handle them separately
+            if (val instanceof JSONObject) {
+                continue;
+            }
+
+            // Skip jcr:primaryType since we set it during node creation
+            if ("jcr:primaryType".equals(key)) {
+                continue;
+            }
+
+            // Handle arrays (e.g. cq:styleIds)
+            if (val instanceof JSONArray) {
+                JSONArray jarr = (JSONArray) val;
+                String[] values = new String[jarr.length()];
+                for (int i = 0; i < jarr.length(); i++) {
+                    values[i] = jarr.optString(i, "");
+                }
+                node.setProperty(key, values);
+                continue;
+            }
+
+            // Everything else is a string property
+            node.setProperty(key, val.toString());
+        }
+
+        // Recurse into child nodes (JSONObject values)
+        keys = json.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object val = json.get(key);
+            if (val instanceof JSONObject) {
+                writeJsonToJcr(node, key, (JSONObject) val, session);
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Writes every key in a JSON fields object to a JCR node as a String property. */
-    private static void setFields(Node node, JSONObject fields) {
-        fields.keys().forEachRemaining(key -> {
-            try {
-                node.setProperty(key, fields.getString(key));
-            } catch (Exception ex) {
-                log.warn("[ShowcaseUtils] Could not set field {}: {}", key, ex.getMessage());
-            }
-        });
-    }
-
-    /** Gets an existing child node or creates it with the given type. */
-    public static Node getOrCreateNode(Node parent, String name, String type) throws Exception {
-        if (parent.hasNode(name)) return parent.getNode(name);
-        return parent.addNode(name, type);
-    }
-
-    /** Recursively ensures a JCR path exists, creating missing nodes. */
     public static void ensureNode(Session session, String path, String type) throws Exception {
         if (!session.nodeExists(path)) {
             String parentPath = path.substring(0, path.lastIndexOf('/'));
@@ -327,12 +304,10 @@ public final class ShowcaseUtils {
         }
     }
 
-    /** Extracts the component name from a resource type. e.g. "wknd/components/teaser" → "teaser" */
     public static String extractComponentName(String resourceType) {
         return resourceType.substring(resourceType.lastIndexOf('/') + 1);
     }
 
-    /** Builds a standard error JSON response string. */
     public static String error(String message) {
         return new JSONObject().put("status", "error").put("message", message).toString();
     }

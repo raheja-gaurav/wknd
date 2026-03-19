@@ -23,8 +23,8 @@ import java.util.Map;
  *
  * Path : POST /bin/showcase/createPage
  *
- * Uses the "showcase" service user (wknd-showcase-service) which has
- * read/write access to /content/showcase for creating pages.
+ * Accepts the full AEM page-importable JSON (the array format Claude returns)
+ * and writes it directly into JCR under /content/showcase.
  */
 @Component(service = Servlet.class)
 @SlingServletPaths("/bin/showcase/createPage")
@@ -45,43 +45,42 @@ public class ShowcasePageCreatorServlet extends SlingAllMethodsServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String resourceType   = request.getParameter("resourceType");
-        String variationsJson = request.getParameter("variationsJson");
+        String resourceType = request.getParameter("resourceType");
+        String pageJson     = request.getParameter("pageJson");
 
         if (resourceType == null || resourceType.isEmpty()) {
             response.getWriter().print(ShowcaseUtils.error("resourceType parameter is required"));
             return;
         }
-        if (variationsJson == null || variationsJson.isEmpty()) {
-            response.getWriter().print(ShowcaseUtils.error("variationsJson parameter is required"));
+        if (pageJson == null || pageJson.isEmpty()) {
+            response.getWriter().print(ShowcaseUtils.error("pageJson parameter is required"));
             return;
         }
 
-        log.info("[ShowcasePageCreator] Creating page for: {}", resourceType);
+        // Strip markdown fences if Claude wrapped the JSON
+        pageJson = pageJson.trim();
+        if (pageJson.startsWith("```json")) pageJson = pageJson.substring(7);
+        else if (pageJson.startsWith("```")) pageJson = pageJson.substring(3);
+        if (pageJson.endsWith("```")) pageJson = pageJson.substring(0, pageJson.length() - 3);
+        pageJson = pageJson.trim();
+
+        log.info("[ShowcasePageCreator] Creating page for: {} ({} chars of JSON)", resourceType, pageJson.length());
 
         Map<String, Object> authInfo = Collections.singletonMap(
                 ResourceResolverFactory.SUBSERVICE, SUBSERVICE);
 
         try (ResourceResolver resolver = resolverFactory.getServiceResourceResolver(authInfo)) {
 
-            // 1. Parse JSON from Claude
-            JSONObject variations = ShowcaseUtils.parseVariationsJson(variationsJson);
-            log.info("[ShowcasePageCreator] Parsed {} variations, {} edge cases",
-                    variations.getJSONArray("variations").length(),
-                    variations.getJSONArray("edgeCases").length());
-
-            // 2. Write the showcase page to JCR
-            String showcasePath = ShowcaseUtils.createShowcasePage(resolver, resourceType, variations);
+            // Import the page JSON directly into JCR
+            String showcasePath = ShowcaseUtils.createShowcasePage(resolver, resourceType, pageJson);
             log.info("[ShowcasePageCreator] Page created at: {}", showcasePath);
 
-            // 3. Return page details
+            // Return page details
             JSONObject result = new JSONObject();
-            result.put("status",         "success");
-            result.put("showcasePath",   showcasePath);
-            result.put("editorUrl",      "/editor.html" + showcasePath + ".html");
-            result.put("previewUrl",     showcasePath + ".html");
-            result.put("variationCount", variations.getJSONArray("variations").length());
-            result.put("edgeCaseCount",  variations.getJSONArray("edgeCases").length());
+            result.put("status",       "success");
+            result.put("showcasePath", showcasePath);
+            result.put("editorUrl",    "/editor.html" + showcasePath + ".html");
+            result.put("previewUrl",   showcasePath + ".html");
             response.getWriter().print(result.toString());
 
         } catch (Exception e) {

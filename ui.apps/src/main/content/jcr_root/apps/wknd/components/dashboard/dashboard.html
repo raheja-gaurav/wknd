@@ -1028,15 +1028,15 @@ function copyPrompt() {
  * Calls the servlet with action=createPage + the pasted JSON.
  */
 function submitCreatePage() {
-  const variationsJson = document.getElementById('jsonInput').value.trim();
+  const pageJson = document.getElementById('jsonInput').value.trim();
 
-  if (!variationsJson) {
+  if (!pageJson) {
     showToast('Paste the JSON response from Claude first', '');
     return;
   }
 
   // Basic JSON validation before sending
-  try { JSON.parse(variationsJson); }
+  try { JSON.parse(pageJson); }
   catch (e) {
     showToast('Invalid JSON — check your paste: ' + e.message, '');
     return;
@@ -1046,10 +1046,10 @@ function submitCreatePage() {
   btn.disabled    = true;
   btn.textContent = 'Creating page…';
 
-  // Call ShowcasePageCreatorServlet to write the JCR page
+  // Call ShowcasePageCreatorServlet to import the page JSON into JCR
   postWithCsrf('/bin/showcase/createPage',
-      'resourceType='   + encodeURIComponent(_popup.resourceType)
-    + '&variationsJson=' + encodeURIComponent(variationsJson))
+      'resourceType=' + encodeURIComponent(_popup.resourceType)
+    + '&pageJson='    + encodeURIComponent(pageJson))
   .then(r => r.json())
   .then(data => {
     btn.disabled    = false;
@@ -1058,7 +1058,7 @@ function submitCreatePage() {
     if (data.status === 'success') {
       closePopup();
       onGenerateDone(_popup.row, _popup.name, _popup.resourceType, data);
-      showToast('Page created — ' + data.variationCount + ' variations!', 'success');
+      showToast('Page created at ' + data.showcasePath, 'success');
     } else {
       showToast('Error: ' + (data.message || 'Unknown error'), '');
     }
