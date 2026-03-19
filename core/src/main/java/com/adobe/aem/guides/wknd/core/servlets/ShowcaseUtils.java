@@ -1,8 +1,8 @@
 package com.adobe.aem.guides.wknd.core.servlets;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -10,18 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Shared utilities for the Showcase servlet pair.
  *
  * Used by:
- *   ShowcasePromptServlet    (/bin/showcase/prompt)    — reads dialog, returns prompt
- *   ShowcasePageCreatorServlet (/bin/showcase/createPage) — parses JSON, writes JCR page
- *
- * To add a new field to the prompt, edit buildPrompt().
- * To change how pages are written to JCR, edit createShowcasePage().
+ *   ShowcasePromptServlet      (/bin/showcase/prompt)     — reads dialog, returns prompt
+ *   ShowcasePageCreatorServlet (/bin/showcase/createPage)  — parses JSON, writes JCR page
  */
 public final class ShowcaseUtils {
 
@@ -33,105 +28,85 @@ public final class ShowcaseUtils {
     private ShowcaseUtils() {}
 
     // ─────────────────────────────────────────────────────────────────────────
-    // READ DIALOG XML
-    // Reads /apps/{resourceType}/_cq_dialog/.content.xml from JCR.
+    // READ DIALOG AS JSON
+    // Reads /apps/{resourceType}/cq:dialog node tree from JCR and converts
+    // it to JSON — same structure as AEM's cq:dialog.infinity.json endpoint.
     // Returns null if no dialog exists for this component.
     // ─────────────────────────────────────────────────────────────────────────
     public static String readDialogXML(ResourceResolver resolver, String resourceType) {
         try {
-            String dialogPath = "/apps/" + resourceType + "/_cq_dialog/.content.xml";
+            // In JCR the node is "cq:dialog" (colon in name)
+            String dialogPath = "/apps/" + resourceType + "/cq:dialog";
             Resource dialogResource = resolver.getResource(dialogPath);
 
+            // Fallback: try the on-disk vault name just in case
             if (dialogResource == null) {
-                log.warn("[ShowcaseUtils] Dialog not found at: {}", dialogPath);
+                dialogPath = "/apps/" + resourceType + "/_cq_dialog";
+                dialogResource = resolver.getResource(dialogPath);
+            }
+
+            if (dialogResource == null) {
+                log.warn("[ShowcaseUtils] Dialog not found for resourceType: {}", resourceType);
                 return null;
             }
 
-            // Primary: read directly as InputStream (file node)
-            InputStream is = dialogResource.adaptTo(InputStream.class);
-
-            // Fallback 1: jcr:content child (binary node)
-            if (is == null) {
-                Resource jcrContent = dialogResource.getChild("jcr:content");
-                if (jcrContent != null) {
-                    is = jcrContent.adaptTo(InputStream.class);
-                }
-            }
-
-            if (is != null) {
-                return IOUtils.toString(is, StandardCharsets.UTF_8);
-            }
-
-            // Fallback 2: serialize JCR node properties as XML-like string
-            // (used when dialog is stored as nt:unstructured in JCR, not as a file)
-            return serializeNodeAsString(resolver, dialogPath);
+            // Recursively convert the entire node tree to JSON
+            JSONObject dialogJson = resourceToJson(dialogResource);
+            String json = dialogJson.toString(2);
+            log.info("[ShowcaseUtils] Dialog JSON for {} — {} chars", resourceType, json.length());
+            return json;
 
         } catch (Exception e) {
-            log.error("[ShowcaseUtils] Failed to read dialog XML: {}", e.getMessage());
+            log.error("[ShowcaseUtils] Failed to read dialog for {}: {}", resourceType, e.getMessage());
             return null;
         }
     }
 
-    private static String serializeNodeAsString(ResourceResolver resolver, String path) {
-        Resource res = resolver.getResource(path);
-        if (res == null) return null;
-        StringBuilder sb = new StringBuilder();
-        sb.append("<dialog path=\"").append(path).append("\">\n");
-        serializeResource(res, sb, 0);
-        sb.append("</dialog>");
-        return sb.toString();
-    }
+    /**
+     * Recursively converts a Sling Resource and all its children into a JSONObject.
+     * Produces the same structure as AEM's .infinity.json servlet.
+     */
+    private static JSONObject resourceToJson(Resource resource) {
+        JSONObject obj = new JSONObject();
+        ValueMap props = resource.getValueMap();
 
-    private static void serializeResource(Resource resource, StringBuilder sb, int depth) {
-        String indent = "  ".repeat(depth);
-        sb.append(indent).append("<node name=\"").append(resource.getName()).append("\"");
-        resource.getValueMap().forEach((k, v) -> {
-            if (!k.startsWith("jcr:created") && !k.startsWith("jcr:lastModified")) {
-                sb.append(" ").append(k).append("=\"").append(v.toString()).append("\"");
+        // Copy all properties — skip internal timestamps to keep the prompt concise
+        for (String key : props.keySet()) {
+            if (key.startsWith("jcr:created") || key.startsWith("jcr:lastModified")
+                    || key.equals("jcr:uuid")) {
+                continue;
             }
-        });
-        sb.append(">\n");
-        resource.getChildren().forEach(child -> serializeResource(child, sb, depth + 1));
-        sb.append(indent).append("</node>\n");
+            Object val = props.get(key);
+            if (val instanceof String[]) {
+                obj.put(key, new JSONArray((String[]) val));
+            } else if (val != null) {
+                obj.put(key, val.toString());
+            }
+        }
+
+        // Recurse into child nodes
+        for (Resource child : resource.getChildren()) {
+            obj.put(child.getName(), resourceToJson(child));
+        }
+
+        return obj;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // READ SHOWCASE CONFIG JSON
     // Optional file at /apps/{resourceType}/showcase-config.json.
-    // Provides brand guidelines, asset paths, variation hints, etc.
     // Returns empty JSONObject when not found — servlet still works fine.
     // ─────────────────────────────────────────────────────────────────────────
     public static JSONObject readShowcaseConfig(ResourceResolver resolver, String resourceType) {
-        try {
-            String configPath = "/apps/" + resourceType + "/showcase-config.json";
-            Resource configResource = resolver.getResource(configPath);
-
-            if (configResource == null) {
-                log.info("[ShowcaseUtils] No showcase-config.json at {} — using defaults", configPath);
-                return new JSONObject();
-            }
-
-            InputStream is = configResource.adaptTo(InputStream.class);
-            if (is == null) {
-                Resource jcrContent = configResource.getChild("jcr:content");
-                if (jcrContent != null) is = jcrContent.adaptTo(InputStream.class);
-            }
-
-            if (is != null) {
-                return new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
-            }
-
-        } catch (Exception e) {
-            log.warn("[ShowcaseUtils] Could not read showcase-config.json: {}", e.getMessage());
-        }
+        // For now just return empty — can be extended later
         return new JSONObject();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // BUILD AI PROMPT
-    // Combines dialog XML + optional config into the prompt shown to the user.
+    // Combines dialog JSON + optional config into the prompt shown to the user.
     // ─────────────────────────────────────────────────────────────────────────
-    public static String buildPrompt(String dialogXML, JSONObject config, String resourceType) {
+    public static String buildPrompt(String dialogJson, JSONObject config, String resourceType) {
         StringBuilder p = new StringBuilder();
 
         p.append("You are an AEM (Adobe Experience Manager) expert.\n");
@@ -143,8 +118,8 @@ public final class ShowcaseUtils {
         if (config.has("description")) p.append("COMPONENT PURPOSE: ").append(config.getString("description")).append("\n");
         p.append("\n");
 
-        p.append("DIALOG XML (fields authors can configure):\n");
-        p.append("```xml\n").append(dialogXML).append("\n```\n\n");
+        p.append("COMPONENT DIALOG JSON (this is the cq:dialog node tree — all the fields authors can configure):\n");
+        p.append("```json\n").append(dialogJson).append("\n```\n\n");
 
         if (config.has("assetPaths")) {
             p.append("USE THESE REAL AEM ASSET PATHS IN YOUR CONTENT:\n");
@@ -204,7 +179,9 @@ public final class ShowcaseUtils {
         p.append("Rules:\n");
         p.append("- Maximum 5 variations\n");
         p.append("- Maximum 3 edge cases\n");
-        p.append("- Use ONLY field names that exist in the dialog XML\n");
+        p.append("- Use ONLY field \"name\" properties that exist in the dialog JSON above\n");
+        p.append("- The \"fields\" object keys must match the JCR property names from the dialog (the \"name\" attributes like ./jcr:title, ./pretitle, etc.)\n");
+        p.append("- Strip the leading ./ from field names in your output (e.g. use \"jcr:title\" not \"./jcr:title\")\n");
         p.append("- Use real asset paths from config if provided\n");
         p.append("- Generate realistic enterprise website content\n");
         p.append("- No lorem ipsum\n");
@@ -235,7 +212,6 @@ public final class ShowcaseUtils {
     // ─────────────────────────────────────────────────────────────────────────
     // CREATE SHOWCASE PAGE IN AEM
     // Writes variations + edge cases as JCR nodes under /content/showcase.
-    // Each variation gets a title heading node + the actual component node.
     // ─────────────────────────────────────────────────────────────────────────
     public static String createShowcasePage(ResourceResolver resolver,
                                             String resourceType,
