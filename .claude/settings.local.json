@@ -6,7 +6,9 @@
       "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f -name *.cfg.json -print)",
       "Bash(xargs grep:*)",
       "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f \\\\\\(-name *.txt -o -name *.config -o -name *.cfg \\\\\\) -print)",
-      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f -name *.txt -print)"
+      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -path */target -prune -o -type f -name *.txt -print)",
+      "Bash(find C:UsersshubhgargDesktophackshubhawkndui.content.sample -path */content/wknd/* -name _jcr_content -type d)",
+      "Bash(find /c/Users/shubhgarg/Desktop/hack/shubha/wknd -type f \\\\\\(-name *.java -o -name *.jsp -o -name *.js -o -name *.xml \\\\\\))"
     ]
   }
 }

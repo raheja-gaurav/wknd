@@ -126,10 +126,12 @@ public final class ShowcaseUtils {
         p.append("      \"root\": {\n");
         p.append("        \"jcr:primaryType\": \"nt:unstructured\",\n");
         p.append("        \"sling:resourceType\": \"wknd/components/container\",\n");
+        p.append("        \"sling:childNodeOrder\": [\"container\"],\n");
         p.append("        \"container\": {\n");
         p.append("          \"jcr:primaryType\": \"nt:unstructured\",\n");
         p.append("          \"layout\": \"responsiveGrid\",\n");
         p.append("          \"sling:resourceType\": \"wknd/components/container\",\n");
+        p.append("          \"sling:childNodeOrder\": [\"heading_0\",\"desc_0\",\"component_0\",\"separator_0\",\"heading_1\",\"desc_1\",\"component_1\",\"separator_1\",\"heading_2\",\"desc_2\",\"component_2\",\"separator_2\",\"heading_3\",\"desc_3\",\"component_3\",\"separator_3\",\"heading_4\",\"desc_4\",\"component_4\",\"separator_4\"],\n");
         p.append("          ... YOUR COMPONENTS GO HERE ...\n");
         p.append("        }\n");
         p.append("      }\n");
@@ -169,7 +171,9 @@ public final class ShowcaseUtils {
         p.append("- For rich text fields, wrap content in <p> tags\n");
         p.append("- For boolean fields (checkboxes), use string \"true\" or \"false\"\n");
         p.append("- For image fields (fileReference), use real WKND DAM paths like:\n");
-        p.append("  /content/dam/wknd-shared/en/magazine/western-australia/western-australia-by-702010-702010.jpg\n");
+        p.append("  /content/dam/wknd-shared/en/magazine/western-australia/adobe-waadobe-wa-mg-3851.jpg\n");
+
+
         p.append("  use this image only\n");
         p.append("- For link fields, use paths like /content/wknd/language-masters/en/about-us\n\n");
 
@@ -278,13 +282,39 @@ public final class ShowcaseUtils {
             node.setProperty(key, val.toString());
         }
 
-        // Recurse into child nodes (JSONObject values)
-        keys = json.keys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            Object val = json.get(key);
-            if (val instanceof JSONObject) {
-                writeJsonToJcr(node, key, (JSONObject) val, session);
+        // Recurse into child nodes (JSONObject values) — honour sling:childNodeOrder if present
+        JSONArray childOrder = json.optJSONArray("sling:childNodeOrder");
+        if (childOrder != null && childOrder.length() > 0) {
+            // First pass: children listed in the order array
+            for (int i = 0; i < childOrder.length(); i++) {
+                String key = childOrder.optString(i);
+                if (json.has(key) && json.get(key) instanceof JSONObject) {
+                    writeJsonToJcr(node, key, json.getJSONObject(key), session);
+                }
+            }
+            // Second pass: any children NOT listed in the order array
+            keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                Object val = json.get(key);
+                if (val instanceof JSONObject) {
+                    boolean listed = false;
+                    for (int i = 0; i < childOrder.length(); i++) {
+                        if (childOrder.optString(i).equals(key)) { listed = true; break; }
+                    }
+                    if (!listed) {
+                        writeJsonToJcr(node, key, (JSONObject) val, session);
+                    }
+                }
+            }
+        } else {
+            keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                Object val = json.get(key);
+                if (val instanceof JSONObject) {
+                    writeJsonToJcr(node, key, (JSONObject) val, session);
+                }
             }
         }
     }
