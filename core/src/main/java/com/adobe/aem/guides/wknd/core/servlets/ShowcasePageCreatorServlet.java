@@ -32,7 +32,7 @@ public class ShowcasePageCreatorServlet extends SlingAllMethodsServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ShowcasePageCreatorServlet.class);
 
-    private static final String SUBSERVICE = "showcase";
+    private static final String SUBSERVICE = "library";
 
     @Reference
     private ResourceResolverFactory resolverFactory;
