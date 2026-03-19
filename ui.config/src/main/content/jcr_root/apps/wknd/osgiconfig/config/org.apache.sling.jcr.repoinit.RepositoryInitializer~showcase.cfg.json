@@ -1,6 +1,7 @@
 {
   "scripts": [
     "create service user wknd-showcase-service",
+    "ensure nodes /apps/wknd(sling:Folder)",
     "set ACL for wknd-showcase-service\n allow jcr:all on /apps/wknd \n end",
     "set ACL for wknd-showcase-service\n allow jcr:all on /content \n end"
   ]
