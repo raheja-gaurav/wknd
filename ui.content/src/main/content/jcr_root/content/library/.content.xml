@@ -6,6 +6,6 @@
         jcr:mixinTypes="[cq:LiveRelationship,cq:LiveSync,mix:versionable]"
         jcr:primaryType="cq:PageContent"
         jcr:uuid="7c1ec005-9699-451b-bc14-e95c686f89ce"
-        sling:resourceType="wknd/components/dashboard"
+        sling:resourceType="/apps/hack/components/dashboard"
         pageTitle="Library"/>
 </jcr:root>

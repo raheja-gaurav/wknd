@@ -1,0 +1,43 @@
+{
+  "component": "Teaser",
+  "description": "Promotes content with an image, title, description and CTA button. Used on landing pages, campaign pages and homepages.",
+
+  "assetPaths": {
+    "sampleImage": "/content/dam/wknd/en/adventures/bali-surf-camp/bali-surf-camp-beach.jpeg",
+    "fallbackImage": "/content/dam/wknd/en/home/hero.jpeg",
+    "productImage": "/content/dam/wknd/en/adventures/cycling-southern-utah/cycling-southern-utah.jpeg"
+  },
+
+  "brandGuidelines": {
+    "tone": "adventurous, inspiring, active",
+    "titleMaxLength": 60,
+    "descriptionMaxLength": 160,
+    "ctaExamples": ["Read More", "Learn More", "Explore Now", "Get Started", "Discover More"],
+    "avoidWords": ["cheap", "buy now", "discount", "click here"]
+  },
+
+  "variationHints": [
+    "Always include a variation with image on the left",
+    "Include a variation with image on the right",
+    "Include a text-only variation without an image",
+    "Include a variation with a CTA button",
+    "Include a variation without a CTA for editorial use"
+  ],
+
+  "edgeCaseHints": [
+    "Test with a very long title exceeding 60 characters to check truncation",
+    "Test with missing fileReference — component must not break",
+    "Test with all optional fields empty — only required fields filled",
+    "Test with a very long description to check text overflow"
+  ],
+
+  "fieldNotes": {
+    "fileReference": "Use the sampleImage path from assetPaths above",
+    "jcr:title": "Use an adventurous, inspiring headline",
+    "jcr:description": "One sentence max — keep it punchy and active",
+    "ctaText": "Use one of the ctaExamples values",
+    "ctaLinkURL": "Use /content/wknd/en/adventures path",
+    "titleType": "Use h2 for most variations, h1 only for hero placement",
+    "imageLinkHidden": "Set to true when you do not want the image to be clickable"
+  }
+}

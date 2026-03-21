@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEM Component Showcase Dashboard</title>
+<style>
+/* =============================================
+   CLIENTLIB: css/showcase-dashboard.css
+   Category: wknd.showcase.dashboard
+   ============================================= */
+
+/* --- GRANITE SHELL HEADER --- */
+.showcase-shell {
+  background: #2c2c2c;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.shell-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.shell-logo {
+  width: 24px;
+  height: 24px;
+  background: #eb1000;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shell-logo svg { width: 14px; height: 14px; }
+.shell-product {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.2px;
+}
+.shell-env {
+  background: #268e6c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.shell-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.shell-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shell-icon:hover { background: rgba(255,255,255,0.1); }
+.shell-project {
+  color: #aaa;
+  font-size: 12px;
+  margin-right: 8px;
+}
+.shell-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1473e6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+
+/* --- CORAL BAR --- */
+.showcase-coral-bar {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #909090;
+}
+.breadcrumb .sep { color: #ccc; }
+.breadcrumb .current { color: #2c2c2c; font-weight: 400; }
+.coral-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.granite-search {
+  height: 32px;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 13px;
+  width: 200px;
+  color: #2c2c2c;
+  outline: none;
+  font-family: inherit;
+}
+.granite-search:focus { border-color: #1473e6; box-shadow: 0 0 0 1px #1473e6; }
+.granite-select {
+  height: 32px;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #2c2c2c;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary-granite {
+  height: 32px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-primary-granite:hover { background: #0d66d0; }
+
+/* --- MAIN CONTENT AREA --- */
+.showcase-content {
+  background: #f5f5f5;
+  min-height: calc(100vh - 104px);
+  padding: 24px;
+  font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* --- STATS BAR --- */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-chip {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  border-top: 3px solid;
+}
+.stat-chip.total  { border-top-color: #909090; }
+.stat-chip.green  { border-top-color: #268e6c; }
+.stat-chip.orange { border-top-color: #e68619; }
+.stat-chip.red    { border-top-color: #d7373f; }
+.stat-num {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+.stat-chip.total  .stat-num { color: #2c2c2c; }
+.stat-chip.green  .stat-num { color: #268e6c; }
+.stat-chip.orange .stat-num { color: #e68619; }
+.stat-chip.red    .stat-num { color: #d7373f; }
+.stat-label {
+  font-size: 11px;
+  color: #909090;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- GRANITE TABLE --- */
+.granite-table-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.granite-table-header {
+  display: grid;
+  grid-template-columns: 40px 48px 2fr 1.2fr 2fr 1fr 1.2fr;
+  padding: 0 16px;
+  height: 40px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  align-items: center;
+  gap: 8px;
+}
+.th-cell {
+  font-size: 11px;
+  font-weight: 700;
+  color: #909090;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.granite-row {
+  display: grid;
+  grid-template-columns: 40px 48px 2fr 1.2fr 2fr 1fr 1.2fr;
+  padding: 0 16px;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.1s;
+  cursor: pointer;
+}
+.granite-row:last-child { border-bottom: none; }
+.granite-row:hover { background: #f5f5f5; }
+.granite-row.selected {
+  background: #e8f0fc;
+  border-left: 3px solid #1473e6;
+}
+
+/* Component icon circle */
+.comp-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Cell text */
+.cell-title  { font-size: 14px; color: #2c2c2c; }
+.cell-sub    { font-size: 11px; color: #909090; font-family: 'Courier New', monospace; margin-top: 1px; }
+.cell-meta   { font-size: 12px; color: #909090; }
+.cell-warn   { font-size: 11px; color: #d7373f; margin-top: 2px; }
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.badge-green  { background: #edf9f0; color: #268e6c; border: 1px solid #c8edd6; }
+.badge-orange { background: #fef4e5; color: #e68619; border: 1px solid #fde8b8; }
+.badge-red    { background: #fef0f0; color: #d7373f; border: 1px solid #f9c8c8; }
+
+/* Action buttons */
+.btn-generate {
+  height: 28px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-generate:hover { background: #0d66d0; }
+.btn-sync {
+  height: 28px;
+  background: #fff;
+  color: #1473e6;
+  border: 1px solid #1473e6;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-sync:hover { background: #f0f6ff; }
+.btn-view {
+  background: none;
+  border: none;
+  color: #1473e6;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  text-decoration: none;
+}
+.btn-view:hover { text-decoration: underline; }
+
+/* Progress row */
+.progress-row {
+  display: grid;
+  grid-template-columns: 40px 48px 1fr;
+  padding: 0 16px;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 8px;
+  background: #f0f6ff;
+}
+.progress-bar-wrap {
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: #1473e6;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.progress-label {
+  font-size: 12px;
+  color: #1473e6;
+}
+
+/* Toast notification */
+.granite-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #2c2c2c;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.granite-toast.success { background: #268e6c; }
+.granite-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Checkbox */
+input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  accent-color: #1473e6;
+  cursor: pointer;
+}
+
+/* ---- PROMPT POPUP OVERLAY ---- */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.popup-overlay.open { display: flex; }
+
+.popup-modal {
+  background: #fff;
+  border-radius: 6px;
+  width: 92vw;
+  max-width: 1100px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+  font-family: 'Adobe Clean','Source Sans Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  overflow: hidden;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e8e8e8;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+.popup-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c2c2c;
+}
+.popup-subtitle {
+  font-size: 12px;
+  color: #707070;
+  margin-top: 2px;
+}
+.popup-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #707070;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.popup-close:hover { background: #e8e8e8; color: #2c2c2c; }
+
+.popup-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* LEFT PANE */
+.popup-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+.popup-pane-header {
+  padding: 10px 16px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.popup-pane-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2c2c2c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pane-hint {
+  font-size: 11px;
+  color: #909090;
+  margin-top: 2px;
+}
+.popup-pane-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+}
+#promptText {
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+.loading-prompt {
+  color: #909090;
+  font-size: 13px;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e8e8e8;
+  border-top-color: #1473e6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RIGHT PANE */
+.popup-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#jsonInput {
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+#jsonInput::placeholder { color: #b0b0b0; }
+
+.popup-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+.btn-cancel-popup {
+  height: 32px;
+  background: #fff;
+  color: #2c2c2c;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-cancel-popup:hover { background: #f5f5f5; }
+.btn-create-page {
+  height: 32px;
+  background: #268e6c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-create-page:hover { background: #1f7359; }
+.btn-create-page:disabled { background: #b0b0b0; cursor: not-allowed; }
+.btn-copy {
+  height: 28px;
+  background: #1473e6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-copy:hover { background: #0d66d0; }
+.btn-copy.copied { background: #268e6c; }
+</style>
+</head>
+<body style="margin:0; padding:0; background:#f5f5f5;">
+
+<!-- =============================================
+     GRANITE SHELL HEADER
+     In AEM: this replaces with actual shell
+     ============================================= -->
+<header class="showcase-shell">
+  <div class="shell-left">
+    <div class="shell-logo">
+      <svg viewBox="0 0 100 100" fill="white">
+        <polygon points="50,5 95,95 5,95"/>
+      </svg>
+    </div>
+    <span class="shell-product">Adobe Experience Manager</span>
+    <span class="shell-env">DEV</span>
+  </div>
+  <div class="shell-right">
+    <span class="shell-project">WKND Project</span>
+    <button class="shell-icon" title="Search">&#128269;</button>
+    <button class="shell-icon" title="Help">&#63;</button>
+    <button class="shell-icon" title="Notifications">&#128276;</button>
+    <div class="shell-avatar">A</div>
+  </div>
+</header>
+
+<!-- =============================================
+     CORAL BAR
+     ============================================= -->
+<div class="showcase-coral-bar">
+  <nav class="breadcrumb">
+    <span>AEM</span>
+    <span class="sep">›</span>
+    <span>Tools</span>
+    <span class="sep">›</span>
+    <span class="current">Component Showcase</span>
+  </nav>
+  <div class="coral-bar-actions">
+    <input
+      type="text"
+      class="granite-search"
+      placeholder="Search components..."
+      id="searchInput"
+      oninput="filterTable()"
+    />
+    <select class="granite-select" id="statusFilter" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="not-generated">Not Generated</option>
+      <option value="outdated">Outdated</option>
+      <option value="current">Up to date</option>
+    </select>
+    <button class="btn-primary-granite" onclick="generateAll()">
+      Generate All Missing
+    </button>
+  </div>
+</div>
+
+<!-- =============================================
+     MAIN CONTENT
+     ============================================= -->
+<div class="showcase-content">
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-chip total">
+      <span class="stat-num" id="statTotal">3</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-chip green">
+      <span class="stat-num" id="statCurrent">1</span>
+      <span class="stat-label">Up to date</span>
+    </div>
+    <div class="stat-chip orange">
+      <span class="stat-num" id="statOutdated">1</span>
+      <span class="stat-label">Outdated</span>
+    </div>
+    <div class="stat-chip red">
+      <span class="stat-num" id="statMissing">1</span>
+      <span class="stat-label">Not Generated</span>
+    </div>
+  </div>
+
+  <!-- Component table -->
+  <div class="granite-table-card">
+
+    <!-- Table header -->
+    <div class="granite-table-header">
+      <div><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></div>
+      <div></div>
+      <div class="th-cell">Component</div>
+      <div class="th-cell">Group</div>
+      <div class="th-cell">Resource Type</div>
+      <div class="th-cell">Status</div>
+      <div class="th-cell">Action</div>
+    </div>
+
+    <!-- Table body -->
+    <div id="tableBody">
+
+      <!-- ROW 1 — Teaser — NOT GENERATED -->
+      <div class="granite-row" data-status="not-generated" data-name="teaser" onclick="selectRow(this)">
+        <div><input type="checkbox" onclick="event.stopPropagation()"></div>
+        <div>
+          <div class="comp-icon" style="background:#2d9d78;">T</div>
+        </div>
+        <div>
+          <div class="cell-title">Teaser</div>
+          <div class="cell-sub">wknd/components/teaser</div>
+        </div>
+        <div class="cell-meta">WKND — Content</div>
+        <div class="cell-meta" style="font-family:monospace; font-size:11px;">/apps/wknd/components/teaser</div>
+        <div>
+          <span class="badge badge-red">Not generated</span>
+        </div>
+        <div>
+          <button
+            class="btn-generate"
+            onclick="event.stopPropagation(); generateComponent('teaser', 'hack/components/teaser', this)">
+            Generate
+          </button>
+        </div>
+      </div>
+
+
+
+
+    </div><!-- end tableBody -->
+  </div><!-- end granite-table-card -->
+
+</div><!-- end showcase-content -->
+
+<!-- Toast notification -->
+<div class="granite-toast" id="toast"></div>
+
+<!-- =============================================
+     PROMPT POPUP MODAL
+     ============================================= -->
+<div class="popup-overlay" id="promptPopup" onclick="handleOverlayClick(event)">
+  <div class="popup-modal">
+
+    <!-- Modal header -->
+    <div class="popup-header">
+      <div>
+        <h2 id="popupTitle">Generate Showcase — Teaser</h2>
+        <div class="popup-subtitle">Copy the prompt → paste into Claude → paste the JSON response back → click Generate Page</div>
+      </div>
+      <button class="popup-close" onclick="closePopup()" title="Close">&#10005;</button>
+    </div>
+
+    <!-- Two-pane body -->
+    <div class="popup-body">
+
+      <!-- LEFT: Generated prompt -->
+      <div class="popup-left">
+        <div class="popup-pane-header">
+          <div>
+            <div class="popup-pane-title">Step 1 — AI Prompt</div>
+            <div class="pane-hint">Copy this and paste it into Claude / ChatGPT</div>
+          </div>
+          <button class="btn-copy" id="copyBtn" onclick="copyPrompt()">Copy Prompt</button>
+        </div>
+        <div class="popup-pane-content">
+          <div class="loading-prompt" id="promptLoading">
+            <span class="spinner"></span> Reading dialog and building prompt...
+          </div>
+          <textarea id="promptText" readonly style="display:none;"></textarea>
+        </div>
+      </div>
+
+      <!-- RIGHT: User pastes JSON response -->
+      <div class="popup-right">
+        <div class="popup-pane-header">
+          <div>
+            <div class="popup-pane-title">Step 2 — Paste JSON Response</div>
+            <div class="pane-hint">Paste the JSON that Claude returned, then click Generate Page</div>
+          </div>
+        </div>
+        <div class="popup-pane-content">
+          <textarea id="jsonInput" placeholder='Paste the JSON response from Claude here...&#10;&#10;Expected format:&#10;{&#10;  "componentName": "...",&#10;  "variations": [...],&#10;  "edgeCases": [...]&#10;}'></textarea>
+        </div>
+        <div class="popup-footer">
+          <button class="btn-cancel-popup" onclick="closePopup()">Cancel</button>
+          <button class="btn-create-page" id="createPageBtn" onclick="submitCreatePage()">
+            Generate Page
+          </button>
+        </div>
+      </div>
+
+    </div><!-- end popup-body -->
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   showcase-dashboard.js
+   =============================================================
+   ARCHITECTURE OVERVIEW
+   ---------------------
+   The Generate button triggers a 2-step, human-in-the-loop flow:
+
+   STEP 1 — Get Prompt
+     POST /bin/showcase/generate  { action: "getPrompt", resourceType }
+     → Servlet reads the component's _cq_dialog/.content.xml and returns
+       a detailed prompt string.
+     → Popup opens; user sees the prompt on the LEFT pane.
+
+   STEP 2 — User Copies Prompt → Pastes into Claude → Gets JSON
+     The user manually copies the prompt, opens Claude (or ChatGPT),
+     pastes it, and gets back a JSON payload with all variations /
+     edge-cases derived from the dialog.
+
+   STEP 3 — Create Page
+     User pastes the JSON on the RIGHT pane and clicks "Generate Page".
+     POST /bin/showcase/generate  { action: "createPage", resourceType, variationsJson }
+     → Servlet parses the JSON and writes AEM JCR nodes under
+       /content/showcase/{componentName}.
+     → Dashboard row updates to "Up to date".
+
+   SERVLET ACTIONS (ShowcaseGeneratorServlet.java)
+     action=getPrompt   → { status, prompt }
+     action=createPage  → { status, showcasePath, editorUrl, variationCount, … }
+   ============================================================= */
+
+// ─── CSRF Token ───────────────────────────────────────────────────────────────
+// AEM requires a CSRF token for all POST requests. We fetch it once and cache it.
+// If the token expires, we re-fetch on the next call.
+var _csrfToken = null;
+
+/**
+ * Fetches CSRF token from AEM's Granite endpoint.
+ * Returns a Promise that resolves to the token string.
+ */
+function getCsrfToken() {
+  if (_csrfToken) return Promise.resolve(_csrfToken);
+  return fetch('/libs/granite/csrf/token.json', { credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { _csrfToken = data.token; return _csrfToken; });
+}
+
+/**
+ * Wrapper for POST requests that automatically includes the CSRF token.
+ * Usage:  postWithCsrf('/bin/showcase/prompt', 'resourceType=foo')
+ *           .then(r => r.json())
+ */
+function postWithCsrf(url, body) {
+  return getCsrfToken().then(function(token) {
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'CSRF-Token': token
+      },
+      body: body
+    }).then(function(r) {
+      // If CSRF token expired, clear cache and retry once
+      if (r.status === 403 || r.status === 500) {
+        _csrfToken = null;
+        return getCsrfToken().then(function(newToken) {
+          return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'CSRF-Token': newToken
+            },
+            body: body
+          });
+        });
+      }
+      return r;
+    });
+  });
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+// Holds the context for the currently open popup so both steps share it.
+var _popup = {
+  name:         null,   // component name, e.g. "teaser"
+  resourceType: null,   // e.g. "wknd/components/teaser"
+  row:          null,   // the dashboard table row element
+  prompt:       null    // the prompt string returned from the servlet
+};
+
+// ─── ROW SELECTION ────────────────────────────────────────────────────────────
+function selectRow(row) {
+  const wasSelected = row.classList.contains('selected');
+  document.querySelectorAll('.granite-row').forEach(r => r.classList.remove('selected'));
+  if (!wasSelected) row.classList.add('selected');
+}
+
+function toggleAll(master) {
+  document.querySelectorAll('#tableBody input[type=checkbox]')
+    .forEach(cb => cb.checked = master.checked);
+  document.querySelectorAll('.granite-row')
+    .forEach(row => master.checked
+      ? row.classList.add('selected')
+      : row.classList.remove('selected'));
+}
+
+// ─── FILTER & STATS ───────────────────────────────────────────────────────────
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const s = document.getElementById('statusFilter').value;
+  document.querySelectorAll('.granite-row').forEach(row => {
+    const matchQ = !q || (row.dataset.name || '').includes(q);
+    const matchS = !s || row.dataset.status === s;
+    row.style.display = matchQ && matchS ? '' : 'none';
+  });
+  updateStats();
+}
+
+function updateStats() {
+  const rows = [...document.querySelectorAll('.granite-row')]
+    .filter(r => r.style.display !== 'none');
+  document.getElementById('statTotal').textContent    = rows.length;
+  document.getElementById('statCurrent').textContent  = rows.filter(r => r.dataset.status === 'current').length;
+  document.getElementById('statOutdated').textContent = rows.filter(r => r.dataset.status === 'outdated').length;
+  document.getElementById('statMissing').textContent  = rows.filter(r => r.dataset.status === 'not-generated').length;
+}
+
+// ─── STEP 1: OPEN POPUP & FETCH PROMPT ────────────────────────────────────────
+/**
+ * Called when the user clicks "Generate" on a component row.
+ * Calls the servlet with action=getPrompt to get the AI prompt,
+ * then opens the two-pane popup.
+ */
+function generateComponent(name, resourceType, btn) {
+  // Save context so the "Generate Page" button knows which component to act on
+  _popup.name         = name;
+  _popup.resourceType = resourceType;
+  _popup.row          = btn.closest('.granite-row');
+  _popup.prompt       = null;
+
+  // Update popup title
+  document.getElementById('popupTitle').textContent =
+    'Generate Showcase — ' + name.charAt(0).toUpperCase() + name.slice(1);
+
+  // Reset both panes
+  document.getElementById('promptLoading').style.display = 'flex';
+  document.getElementById('promptText').style.display    = 'none';
+  document.getElementById('promptText').value            = '';
+  document.getElementById('jsonInput').value             = '';
+  document.getElementById('copyBtn').textContent         = 'Copy Prompt';
+  document.getElementById('copyBtn').classList.remove('copied');
+  document.getElementById('createPageBtn').disabled      = false;
+
+  // Open popup
+  document.getElementById('promptPopup').classList.add('open');
+
+  // Call ShowcasePromptServlet to get the prompt
+  postWithCsrf('/bin/showcase/prompt', 'resourceType=' + encodeURIComponent(resourceType))
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      _popup.prompt = data.prompt;
+      document.getElementById('promptText').value = data.prompt;
+      document.getElementById('promptLoading').style.display = 'none';
+      document.getElementById('promptText').style.display    = 'block';
+    } else {
+      document.getElementById('promptLoading').innerHTML =
+        '<span style="color:#d7373f;">&#9888; Error: ' + (data.message || 'Unknown error') + '</span>';
+    }
+  })
+  .catch(err => {
+    document.getElementById('promptLoading').innerHTML =
+      '<span style="color:#d7373f;">&#9888; Network error: ' + err.message + '</span>';
+  });
+}
+
+// ─── POPUP CONTROLS ───────────────────────────────────────────────────────────
+function closePopup() {
+  document.getElementById('promptPopup').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  // Close if clicking the dark overlay (not the modal itself)
+  if (e.target === document.getElementById('promptPopup')) closePopup();
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptText').value;
+  if (!text) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy Prompt';
+      btn.classList.remove('copied');
+    }, 2500);
+  }).catch(() => {
+    // Fallback for browsers without clipboard API
+    document.getElementById('promptText').select();
+    document.execCommand('copy');
+    showToast('Prompt copied to clipboard', 'success');
+  });
+}
+
+// ─── STEP 3: SUBMIT JSON → CREATE AEM PAGE ────────────────────────────────────
+/**
+ * Called when the user clicks "Generate Page" after pasting the JSON.
+ * Calls the servlet with action=createPage + the pasted JSON.
+ */
+function submitCreatePage() {
+  const pageJson = document.getElementById('jsonInput').value.trim();
+
+  if (!pageJson) {
+    showToast('Paste the JSON response from Claude first', '');
+    return;
+  }
+
+  // Basic JSON validation before sending
+  try { JSON.parse(pageJson); }
+  catch (e) {
+    showToast('Invalid JSON — check your paste: ' + e.message, '');
+    return;
+  }
+
+  const btn = document.getElementById('createPageBtn');
+  btn.disabled    = true;
+  btn.textContent = 'Creating page…';
+
+  // Call ShowcasePageCreatorServlet to import the page JSON into JCR
+  postWithCsrf('/bin/showcase/createPage',
+      'resourceType=' + encodeURIComponent(_popup.resourceType)
+    + '&pageJson='    + encodeURIComponent(pageJson))
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled    = false;
+    btn.textContent = 'Generate Page';
+
+    if (data.status === 'success') {
+      closePopup();
+      onGenerateDone(_popup.row, _popup.name, _popup.resourceType, data);
+      showToast('Page created at ' + data.showcasePath, 'success');
+    } else {
+      showToast('Error: ' + (data.message || 'Unknown error'), '');
+    }
+  })
+  .catch(err => {
+    btn.disabled    = false;
+    btn.textContent = 'Generate Page';
+    showToast('Network error: ' + err.message, '');
+  });
+}
+
+// ─── AFTER SUCCESSFUL PAGE CREATION ──────────────────────────────────────────
+/**
+ * Updates the dashboard row to "Up to date" and shows a View Showcase link.
+ * @param {HTMLElement} row
+ * @param {string} name
+ * @param {string} resourceType
+ * @param {object} data  — servlet response (has showcasePath, variationCount)
+ */
+function onGenerateDone(row, name, resourceType, data) {
+  data = data || {};
+  const count   = data.variationCount || '?';
+  const editor  = data.editorUrl  || ('/editor.html/content/showcase/' + name + '.html');
+
+  row.dataset.status     = 'current';
+  row.style.pointerEvents = '';
+
+  row.children[5].innerHTML =
+    '<span class="badge badge-green">Up to date</span>'
+    + '<div style="font-size:11px;color:#909090;margin-top:2px;">Just now · ' + count + ' variations</div>';
+
+  row.children[6].innerHTML =
+    '<button class="btn-view"'
+    + ' onclick="event.stopPropagation(); viewShowcase(\'' + name + '\',\'' + resourceType + '\',\'' + editor + '\')">'
+    + 'View Showcase &rsaquo;</button>';
+
+  updateStats();
+}
+
+// ─── SYNC (OUTDATED) ─────────────────────────────────────────────────────────
+/**
+ * Sync re-uses the same popup flow — it's the same process for an outdated component.
+ */
+function syncComponent(name, resourceType, btn) {
+  generateComponent(name, resourceType, btn);
+}
+
+// ─── VIEW SHOWCASE ────────────────────────────────────────────────────────────
+function viewShowcase(name, resourceType, editorUrl) {
+  if (editorUrl) {
+    window.open(editorUrl, '_blank');
+  } else {
+    showToast('Opening showcase for ' + name + '...', 'success');
+  }
+}
+
+// ─── GENERATE ALL ─────────────────────────────────────────────────────────────
+function generateAll() {
+  const missing = [...document.querySelectorAll('.granite-row')]
+    .filter(r => r.dataset.status === 'not-generated');
+
+  if (missing.length === 0) {
+    showToast('All components are up to date');
+    return;
+  }
+
+  // Trigger one-at-a-time with a small delay so prompts don't overlap
+  missing.forEach((row, idx) => {
+    const btn = row.querySelector('.btn-generate');
+    if (btn) setTimeout(() => btn.click(), idx * 800);
+  });
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'granite-toast' + (type ? ' ' + type : '');
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('visible')));
+  setTimeout(() => t.classList.remove('visible'), 3500);
+}
+
+// ─── KEYBOARD: Escape closes popup ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePopup();
+});
+</script>
+</body>
+</html>

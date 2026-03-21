@@ -4,4 +4,4 @@
     jcr:description="Teaser block allowing a combination of an image, title, rich text description and actions/links"
     jcr:primaryType="cq:Component"
     jcr:title="Teaser (v2)"
-    componentGroup="Core Content"/>
+    componentGroup="WKND.Content"/>
